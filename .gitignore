@@ -1,0 +1,32 @@
+# Local operator state and credentials
+*.known_hosts
+*hostkey*.tmp
+*host-key*.tmp
+.env
+*.local.env
+
+# Private node records and remote administration helpers
+docs/TEST-NODE-STATE.md
+tools/pve_remote_exec.py
+tools/bootstrap_pve_ssh.py
+docs/PRODUCTION-RUNBOOK.md
+docs/TEMPLATE-V2-SPEC.md
+
+# Test-node and legacy one-off builders kept locally, not published
+recreate-9000-9006-cloudinit-templates.sh
+tools/create_ubuntu_2204_template_9000.sh
+tools/create_cloud_templates_9001_9006.sh
+tools/apply-template-qos-9000-9006.sh
+
+# Downloaded cloud images and logs
+*.img
+*.qcow2
+*.part
+*.log
+cloud-images-cache/
+
+# Editor / OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
