@@ -27,7 +27,7 @@
 - 支持任意活动的PVE镜像存储，如ZFS、LVM-thin、Ceph RBD或目录存储。
 - Cloud-Init静态IPv4占位配置，方便WHMCS在克隆时覆盖。
 - root密码或SSH Key下发。
-- QEMU Guest Agent首次开机安装并启用。
+- QEMU Guest Agent、Vim、curl及`net-tools`（提供`ifconfig`）首次开机安装，Agent随后自动启用。
 - BBR、`fq`、NTP、时区、SSH Host Key重新生成。
 - Cloud-Init vendor-data按内容哈希使用不可变文件名，局部重建不会改写旧模板的SSH策略。
 - 首次开机自动扩展分区及根文件系统。
@@ -360,7 +360,7 @@ CentOS Stream 9确认CPU支持x86-64-v2；CentOS Stream 10确认CPU支持x86-64-
 
 ### Cloud-Init首次启动较慢
 
-QEMU Guest Agent需要在首次启动通过发行版软件源安装。如果公网IP、网关、DNS或软件源不可用，安装会失败或延迟。生产环境可以进一步制作离线预装版镜像。
+QEMU Guest Agent、Vim、curl和`net-tools`需要在首次启动通过发行版软件源安装。如果公网IP、网关、DNS或软件源不可用，安装会失败或延迟。生产环境可以进一步制作离线预装版镜像。
 
 ## 文件说明
 

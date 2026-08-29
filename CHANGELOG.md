@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.1 - 2026-08-29
+
+- Install Vim, curl and `net-tools` (`ifconfig`) through Cloud-Init by default.
+- Use `vim-enhanced` on AlmaLinux and CentOS Stream guests.
+
 ## 2.0.0 - 2026-08-27
 
 - Add the public one-command Proxmox template builder.

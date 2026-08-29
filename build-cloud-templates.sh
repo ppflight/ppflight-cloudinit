@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-readonly SCRIPT_VERSION="2.0.0"
+readonly SCRIPT_VERSION="2.0.1"
 
 # All settings can be overridden as environment variables or in CONFIG_FILE.
 # The final VM disk storage is intentionally required. A host with both an SSD
@@ -400,6 +400,9 @@ resize_rootfs: true
 package_update: true
 packages:
   - qemu-guest-agent
+  - vim
+  - curl
+  - net-tools
 write_files:
   - path: /etc/ssh/sshd_config.d/00-ppflight-cloud.conf
     owner: root:root
@@ -457,6 +460,9 @@ package_update: true
 packages:
   - qemu-guest-agent
   - chrony
+  - vim-enhanced
+  - curl
+  - net-tools
 write_files:
   - path: /etc/ssh/sshd_config.d/00-ppflight-cloud.conf
     owner: root:root
