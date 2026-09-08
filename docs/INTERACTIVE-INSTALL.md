@@ -14,12 +14,10 @@
 
 ## 安装
 
-首次获取完整仓库：
+一条命令下载并启动，无需 Git：
 
 ```bash
-git clone https://github.com/ppflight/ppflight-cloudinit.git
-cd ppflight-cloudinit
-bash build-cloud-templates.sh
+curl -fsSL https://raw.githubusercontent.com/ppflight/ppflight-cloudinit/main/install.sh | bash
 ```
 
 依次完成四步，最后一步选完后直接开始安装：
@@ -44,16 +42,17 @@ bash build-cloud-templates.sh
 
 脚本校验官方镜像后创建模板，再验证结果并备份。菜单中的“安装／恢复目标”指模板系统盘放置位置；此流程不从旧备份执行 `qmrestore`。
 
-## 更新仓库
+启动程序从 GitHub 下载完整版本快照并核对运行文件摘要。菜单从当前终端读取输入，因此 `curl | bash` 不影响选择操作。程序退出后清理临时安装文件；镜像缓存、模板和备份保留在所选 PVE 存储。
 
-已有仓库且没有本地修改时，在仓库目录运行：
+## 再次运行
+
+再次执行同一条命令即可获取当前版本：
 
 ```bash
-git pull --ff-only
-bash build-cloud-templates.sh
+curl -fsSL https://raw.githubusercontent.com/ppflight/ppflight-cloudinit/main/install.sh | bash
 ```
 
-若 Git 提示本地修改冲突，先保存和处理修改；不要用强制重置丢弃自己的配置。
+已有 VMID 不会被覆盖，请只选择尚未制作的模板。
 
 ## 常见情况
 
@@ -61,8 +60,8 @@ bash build-cloud-templates.sh
 - **已有 VMID**：脚本停止，不覆盖已有 VM 或模板。重新运行时只选择尚未创建的 VMID。
 - **输入错误**：重新显示输入提示；在菜单阶段按 Ctrl+C 或结束输入可退出。
 - **备份失败**：检查备份存储、权限和剩余空间。已经成功创建的模板可能仍存在，应先查看 PVE 状态，避免直接重复安装同一 VMID。
-- **提示需要交互终端**：直接在 PVE Shell/SSH 终端运行，不要通过管道传入菜单答案。
+- **提示需要交互终端**：在 PVE Shell/SSH 终端运行上面的一键命令；启动脚本会打开终端读取菜单，不要通过管道传入菜单答案。
 
 ## 自动化集成
 
-面向人的入口仅需 `bash build-cloud-templates.sh`，不再接收旧命令参数。Agent 自动化使用 [Python helper](AGENT-BOOTSTRAP.md)，由 helper 调用内部构建引擎。镜像校验、VMID 保护和构建验证继续由公共引擎执行。
+面向人的入口使用上面的在线命令，不再接收旧命令参数。Agent 自动化使用 [Python helper](AGENT-BOOTSTRAP.md)，由 helper 调用内部构建引擎。镜像校验、VMID 保护和构建验证继续由公共引擎执行。

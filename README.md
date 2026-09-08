@@ -3,12 +3,10 @@
 在 Proxmox VE 8/9 节点以 root 运行：
 
 ```bash
-git clone https://github.com/ppflight/ppflight-cloudinit.git
-cd ppflight-cloudinit
-bash build-cloud-templates.sh
+curl -fsSL https://raw.githubusercontent.com/ppflight/ppflight-cloudinit/main/install.sh | bash
 ```
 
-按菜单依次选择：
+无需 Git 或手动下载文件。启动脚本自动下载并校验完整安装程序，然后按菜单依次选择：
 
 1. **模板**：输入 VMID；多个用空格或逗号分隔，`ALL` 全选。
 2. **镜像下载位置**：选择保存云镜像和 Cloud-Init snippets 的存储。
