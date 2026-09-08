@@ -24,3 +24,15 @@ choose_storage backup backup BACKUP_STORAGE <<< 1
 STORAGE_DISCOVERY='{"state":"succeeded","storages":[]}'
 if (choose_storage image images FILE_STORAGE <<< 1); then exit 1; fi
 printf 'Interactive menu tests passed.\n'
+# A previously exported backup target/config cannot enable template backups.
+BACKUP_STORAGE=backups
+CONFIG_FILE=/does-not-exist
+main() {
+  [[ "$*" == --no-backup ]]
+  [[ -z "$BACKUP_STORAGE" && -z "${CONFIG_FILE:-}" ]]
+  CREATED_VMIDS=(9000)
+  vzdump() { printf 'Unexpected template backup\n' >&2; exit 1; }
+  backup_templates
+}
+run_template_build
+printf 'Template-only build test passed.\n'

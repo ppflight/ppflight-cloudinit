@@ -87,6 +87,15 @@ confirm_install() {
   done
 }
 
+run_template_build() {
+  unset CONFIG_FILE
+  CACHE_DIR=''
+  BACKUP_STORAGE=''
+  REPLACE_EXISTING=0
+  FORCE_REPLACE_UNMANAGED=0
+  main --no-backup
+}
+
 interactive_main() {
   (($# == 0)) || die '直接运行 bash build-cloud-templates.sh，按菜单选择即可，无需参数'
   [[ ${EUID:-$(id -u)} -eq 0 && -d /etc/pve ]] || die '请在 Proxmox VE 节点以 root 运行'
@@ -101,16 +110,11 @@ interactive_main() {
     die '发现 PVE 存储失败（详细原因见上方）'
   fi
   choose_storage image '选择镜像下载位置（iso、snippets）' FILE_STORAGE
-  choose_storage template '选择模板安装／恢复目标（images）' IMAGE_STORAGE
-  choose_storage backup '选择备份文件保存位置（backup）' BACKUP_STORAGE
-  printf '\n安装配置：模板=%s，镜像=%s，安装／恢复=%s，备份=%s\n' \
-    "$ONLY_TEMPLATES" "$FILE_STORAGE" "$IMAGE_STORAGE" "$BACKUP_STORAGE"
+  choose_storage template '选择模板安装位置（images）' IMAGE_STORAGE
+  printf '\n制作配置：模板=%s，镜像=%s，安装位置=%s\n' \
+    "$ONLY_TEMPLATES" "$FILE_STORAGE" "$IMAGE_STORAGE"
   confirm_install || return 0
-  unset CONFIG_FILE
-  CACHE_DIR=''
-  REPLACE_EXISTING=0
-  FORCE_REPLACE_UNMANAGED=0
-  main
+  run_template_build
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then

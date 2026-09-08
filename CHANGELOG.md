@@ -2,6 +2,8 @@
 
 ## 2026-09-08 — 交互安装入口
 
+- 纠正备份用途：在线入口只制作模板，删除模板备份位置菜单并强制关闭模板备份。VPS 的备份存储由后续 PVE/WHMCS 备份任务指定，不作为模板属性继承。
+
 - 七个镜像源固定为与 catalog 校验值匹配的官方日期版，修复 AlmaLinux、Debian、CentOS 的 `latest` 更新造成的校验中断；保持原始镜像 SHA 不变。
 - 克隆系统关闭 Cloud-Init 升级及自动重启，禁用 APT unattended-upgrades 和 DNF/YUM 自动更新任务；保留必要软件安装与手动更新。
 
