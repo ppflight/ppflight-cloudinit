@@ -43,7 +43,7 @@ class FakeRunner:
         self.calls.append(tuple(argv))
         if tuple(argv[:3]) == ("pvesh", "get", "/storage"):
             return copy.deepcopy(self.configs)
-        if tuple(argv[:2]) == ("pvesm", "status"):
+        if tuple(argv[:2]) == ("pvesh", "get") and argv[2].startswith("/nodes/") and argv[2].endswith("/storage"):
             return copy.deepcopy(self.statuses)
         if tuple(argv[:3]) == ("pvesh", "get", "/cluster/resources"):
             return copy.deepcopy(self.resources)
@@ -220,6 +220,25 @@ class CatalogTests(unittest.TestCase):
 
 
 class DiscoveryAndPlanTests(unittest.TestCase):
+    def test_pve8_storage_discovery_uses_node_json_api(self):
+        configs, statuses = good_inventory()
+        statuses[0].update(active=1, enabled=0)
+        runner = FakeRunner(configs, statuses)
+        with mock.patch.object(bootstrap.socket, "gethostname", return_value="pve.example.com"):
+            storages = bootstrap.discover_storages(runner)
+        self.assertIn(("pvesh", "get", "/nodes/pve/storage", "--output-format", "json"), runner.calls)
+        self.assertFalse(any(call[:2] == ("pvesm", "status") for call in runner.calls))
+        download = next(row for row in storages if row["storageId"] == "download-local")
+        self.assertFalse(download["roleEligibility"]["image"]["allowed"])
+
+    def test_backup_inventory_uses_node_json_api(self):
+        runner = mock.Mock()
+        runner.json.return_value = [{"volid": "local:backup/vzdump-qemu-9000.vma.zst"}]
+        with mock.patch.object(bootstrap.socket, "gethostname", return_value="pve.example.com"):
+            volumes = bootstrap._backup_volumes(runner, "local", 9000)
+        runner.json.assert_called_once_with(("pvesh", "get", "/nodes/pve/storage/local/content", "--content", "backup", "--vmid", "9000", "--output-format", "json"))
+        self.assertEqual(volumes, ["local:backup/vzdump-qemu-9000.vma.zst"])
+
     def test_discovery_has_decimal_bytes_and_role_reasons(self):
         configs, statuses = good_inventory()
         configs.append({"storage": "disabled", "type": "dir", "content": "iso", "disable": 1})

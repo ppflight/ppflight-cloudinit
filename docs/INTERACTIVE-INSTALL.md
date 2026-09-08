@@ -20,12 +20,12 @@
 curl -fsSL https://raw.githubusercontent.com/ppflight/ppflight-cloudinit/main/install.sh | bash
 ```
 
-依次完成四步，最后一步选完后直接开始安装：
+依次完成四步，随后显示配置并提示开始安装（回车默认 Yes，输入 n 取消）：
 
-1. 输入 `ALL` 安装全部模板，或输入 `9000,9001` / `9000 9001` 选择模板。重复 VMID 自动去重。
-2. 输入镜像下载存储的菜单序号。
-3. 输入模板安装／恢复目标存储的菜单序号。
-4. 输入备份存储的菜单序号。
+1. 回车默认 `ALL` 安装全部模板，或输入 `9000,9001` / `9000 9001` 选择模板。重复 VMID 自动去重。
+2. 输入镜像下载存储的菜单序号（回车默认第 1 项）。
+3. 输入模板安装／恢复目标存储的菜单序号（回车默认第 1 项）。
+4. 输入备份存储的菜单序号（回车默认第 1 项）。
 
 示例选择过程（序号取决于本机实际存储列表）：
 
@@ -37,7 +37,7 @@ curl -fsSL https://raw.githubusercontent.com/ppflight/ppflight-cloudinit/main/in
 选择序号：2
 选择备份文件保存位置（backup）
 选择序号：1
-开始安装：模板=9000,9001，镜像=local，安装／恢复=raid-zfs，备份=pbs-backup
+安装配置：模板=9000,9001，镜像=local，安装／恢复=raid-zfs，备份=pbs-backup
 ```
 
 脚本校验官方镜像后创建模板，再验证结果并备份。菜单中的“安装／恢复目标”指模板系统盘放置位置；此流程不从旧备份执行 `qmrestore`。
@@ -55,6 +55,8 @@ curl -fsSL https://raw.githubusercontent.com/ppflight/ppflight-cloudinit/main/in
 已有 VMID 不会被覆盖，请只选择尚未制作的模板。
 
 ## 常见情况
+
+- **发现 PVE 存储失败 / Unknown option: output-format**：旧版本误向 `pvesm` 传入 JSON 输出参数，已改为节点 `pvesh` API。重新执行在线命令获取修复版；新版也会显示具体失败原因。
 
 - **没有合格存储**：在 PVE 中检查存储是否启用、对当前节点可用，以及是否允许表格中的内容类型。镜像存储必须同时支持 `iso` 和 `snippets`。
 - **已有 VMID**：脚本停止，不覆盖已有 VM 或模板。重新运行时只选择尚未创建的 VMID。

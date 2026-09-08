@@ -13,7 +13,7 @@ curl -fsSL https://raw.githubusercontent.com/ppflight/ppflight-cloudinit/main/in
 3. **模板安装／恢复目标**：选择存放模板系统盘的存储。
 4. **备份文件保存位置**：选择新模板备份的存储。
 
-选完直接开始下载、校验、安装和备份，无需命令参数。输入错误会重新提示；退出输入会取消安装。
+回车默认：模板 `ALL`、存储第 `1` 项、开始安装 `Yes`。选完显示配置，按回车开始下载、校验、安装和备份；输入 `n` 取消。无需命令参数，输入错误会重新提示，结束输入会取消安装。
 
 完整操作示例、升级和常见问题见 [交互安装指南](docs/INTERACTIVE-INSTALL.md)，版本变化见 [CHANGELOG](CHANGELOG.md)。
 

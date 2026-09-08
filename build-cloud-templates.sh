@@ -13,7 +13,8 @@ choose_templates() {
     printf '  %s  %s\n' "$vmid" "$name"
   done
   while true; do
-    read -r -p '模板：' answer || die '输入已结束，安装取消'
+    read -r -p '模板 [ALL]：' answer || die '输入已结束，安装取消'
+    answer="${answer:-ALL}"
     answer="${answer//,/ }"
     read -r -a requested <<< "$answer"
     if [[ ${#requested[@]} == 1 && "${requested[0]^^}" == ALL ]]; then
@@ -62,7 +63,8 @@ for s in data["storages"]:
     printf '  %s) %s  [%s]  可用：%s\n' "${#ids[@]}" "$id" "$type" "$free"
   done <<< "$rows"
   while true; do
-    read -r -p '选择序号：' answer || die '输入已结束，安装取消'
+    read -r -p '选择序号 [1]：' answer || die '输入已结束，安装取消'
+    answer="${answer:-1}"
     for index in "${!ids[@]}"; do
       if [[ "$answer" == "$((index + 1))" ]]; then
         printf -v "$variable" '%s' "${ids[$index]}"
@@ -70,6 +72,18 @@ for s in data["storages"]:
       fi
     done
     printf '无效序号，请重新选择。\n'
+  done
+}
+
+confirm_install() {
+  local answer
+  while true; do
+    read -r -p '开始安装？[Y/n]：' answer || die '输入已结束，安装取消'
+    case "${answer,,}" in
+      ''|y|yes) return 0 ;;
+      n|no) printf '已取消安装。\n'; return 1 ;;
+      *) printf '请输入 yes 或 no（回车默认 yes）。\n' ;;
+    esac
   done
 }
 
@@ -82,12 +96,16 @@ interactive_main() {
   require_command pvesm
   load_template_catalog
   choose_templates
-  STORAGE_DISCOVERY="$(python3 "$CATALOG_HELPER" discover)" || die '发现 PVE 存储失败'
+  if ! STORAGE_DISCOVERY="$(python3 "$CATALOG_HELPER" discover)"; then
+    printf '%s\n' "$STORAGE_DISCOVERY" >&2
+    die '发现 PVE 存储失败（详细原因见上方）'
+  fi
   choose_storage image '选择镜像下载位置（iso、snippets）' FILE_STORAGE
   choose_storage template '选择模板安装／恢复目标（images）' IMAGE_STORAGE
   choose_storage backup '选择备份文件保存位置（backup）' BACKUP_STORAGE
-  printf '\n开始安装：模板=%s，镜像=%s，安装／恢复=%s，备份=%s\n' \
+  printf '\n安装配置：模板=%s，镜像=%s，安装／恢复=%s，备份=%s\n' \
     "$ONLY_TEMPLATES" "$FILE_STORAGE" "$IMAGE_STORAGE" "$BACKUP_STORAGE"
+  confirm_install || return 0
   unset CONFIG_FILE
   CACHE_DIR=''
   REPLACE_EXISTING=0

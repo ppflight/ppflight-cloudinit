@@ -13,6 +13,7 @@ import ipaddress
 import json
 import os
 import re
+import socket
 import subprocess
 import sys
 import time
@@ -557,7 +558,8 @@ def _storage_content_remediations(
 
 def discover_storages(runner: CommandRunner) -> List[Dict[str, Any]]:
     configs = runner.json(("pvesh", "get", "/storage", "--output-format", "json"))
-    statuses = runner.json(("pvesm", "status", "--output-format", "json"))
+    node = socket.gethostname().split(".", 1)[0]
+    statuses = runner.json(("pvesh", "get", f"/nodes/{node}/storage", "--output-format", "json"))
     if not isinstance(configs, list) or not isinstance(statuses, list):
         raise ContractError("PVE_STORAGE_RESPONSE_INVALID", "PVE storage discovery did not return arrays")
     status_by_id = {str(row.get("storage")): row for row in statuses if isinstance(row, dict) and row.get("storage")}
@@ -575,7 +577,7 @@ def discover_storages(runner: CommandRunner) -> List[Dict[str, Any]]:
         status = status_by_id.get(storage_id, {})
         storage_type = str(config.get("type", status.get("type", "unknown")))
         content = _content_types(config.get("content"))
-        enabled = not _as_bool(config.get("disable"), False)
+        enabled = not _as_bool(config.get("disable"), False) and _as_bool(status.get("enabled"), True)
         active = str(status.get("status", "")).lower() == "active" or _as_bool(status.get("active"), False)
         available_value = _int_or_none(status.get("avail", status.get("available")))
         role_content = {"image": {"iso", "snippets"}, "template": {"images"}, "backup": {"backup"}}
@@ -921,7 +923,8 @@ def _template_volume(runner: CommandRunner, vmid: int) -> Optional[str]:
 
 
 def _backup_volumes(runner: CommandRunner, storage_id: str, vmid: int) -> List[str]:
-    values = runner.json(("pvesm", "list", storage_id, "--content", "backup", "--vmid", str(vmid), "--output-format", "json"))
+    node = socket.gethostname().split(".", 1)[0]
+    values = runner.json(("pvesh", "get", f"/nodes/{node}/storage/{storage_id}/content", "--content", "backup", "--vmid", str(vmid), "--output-format", "json"))
     if not isinstance(values, list):
         raise ContractError("PVE_BACKUP_RESPONSE_INVALID", "PVE backup listing did not return an array", {"targetVmid": vmid})
     return sorted(str(value["volid"]) for value in values if isinstance(value, dict) and value.get("volid"))
