@@ -22,6 +22,8 @@ jobs:
         run: bash tests/test_interactive.sh
       - name: Test online installer
         run: bash tests/test_installer.sh
+      - name: Test generated guest update policy
+        run: bash tests/test_cloud_profiles.sh
       - name: Reject committed private keys
         run: |
           if git grep -nE 'BEGIN (OPENSSH |RSA |EC )?PRIVATE KEY'; then

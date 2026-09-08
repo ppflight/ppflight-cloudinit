@@ -104,7 +104,7 @@ python3 tools/ppflight-template-bootstrap.py bootstrap \
   --bridge vmbr0 \
   --request-id 11111111-1111-4111-8111-111111111111 \
   --operation-id 22222222-2222-4222-8222-222222222222 \
-  --expected-catalog-revision 2026-08-30.1 \
+  --expected-catalog-revision 2026-09-08.1 \
   --expected-catalog-sha256 <plan.catalog.catalogSha256> \
   --execute
 ```
@@ -127,7 +127,7 @@ Request 的稳定字段：
   "schemaVersion": "ppflight.template-bootstrap-request/v1",
   "requestId": "UUID",
   "operationId": "UUID",
-  "catalogRevision": "2026-08-30.1",
+  "catalogRevision": "2026-09-08.1",
   "imageStorage": "local",
   "templateStorage": "raid-zfs",
   "backupStorage": "pbs-backup",

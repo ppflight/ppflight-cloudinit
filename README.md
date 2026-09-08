@@ -29,6 +29,10 @@ curl -fsSL https://raw.githubusercontent.com/ppflight/ppflight-cloudinit/main/in
 
 菜单显示已启用、在线且支持对应用途的 PVE 存储及剩余空间。镜像位置须支持 `iso,snippets`，安装目标须支持 `images`，备份位置须支持 `backup`。没有合格存储时停止，请先在 PVE 配置相应内容类型。默认网桥为 `vmbr0`。
 
+镜像固定到官方日期版地址，并同时验证目录 SHA-256 和官方 checksum，避免 `latest` 更新导致安装中断。
+
+新模板的克隆系统默认关闭自动升级：PVE `ciupgrade=0`，Cloud-Init 不做全系统升级或自动重启，APT unattended-upgrades 和 DNF/YUM 自动更新任务被屏蔽。首次启动仍安装 QEMU Agent 等必要软件，可能刷新软件源索引；手动安装和更新仍可用。此策略只作用于使用新模板和新 Cloud-Init 配置的克隆，不修改 PVE 宿主机或已有克隆。
+
 安装／恢复目标用于本次创建模板的系统盘；此入口不执行已有备份的 `qmrestore`。安装完成后备份新模板。脚本不分区、不格式化磁盘，也不覆盖已有 VMID。三个位置可以属于同一存储；需要独立备份时选择单独的备份存储。
 
 底层构建逻辑保留官方镜像校验、Cloud-Init 配置和安装结果检查。`tools/build-template-engine.sh` 是内部构建入口，供交互菜单和 Agent 共用。Agent 集成见 [接口文档](docs/AGENT-BOOTSTRAP.md) 和 [内置清单](docs/AGENT-VENDORING.md)。

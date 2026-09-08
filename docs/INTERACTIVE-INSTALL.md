@@ -56,6 +56,8 @@ curl -fsSL https://raw.githubusercontent.com/ppflight/ppflight-cloudinit/main/in
 
 ## 常见情况
 
+- **upstream checksum differs from catalog**：旧入口使用会变化的 `latest` 镜像，已切换到与固定校验值一致的官方日期版。重新运行在线命令即可获取修复；不要跳过 SHA 校验。现有正确镜像缓存会继续校验后复用。
+
 - **发现 PVE 存储失败 / Unknown option: output-format**：旧版本误向 `pvesm` 传入 JSON 输出参数，已改为节点 `pvesh` API。重新执行在线命令获取修复版；新版也会显示具体失败原因。
 
 - **没有合格存储**：在 PVE 中检查存储是否启用、对当前节点可用，以及是否允许表格中的内容类型。镜像存储必须同时支持 `iso` 和 `snippets`。
@@ -65,5 +67,7 @@ curl -fsSL https://raw.githubusercontent.com/ppflight/ppflight-cloudinit/main/in
 - **提示需要交互终端**：在 PVE Shell/SSH 终端运行上面的一键命令；启动脚本会打开终端读取菜单，不要通过管道传入菜单答案。
 
 ## 自动化集成
+
+新模板默认关闭克隆系统自动升级与自动重启，并屏蔽 APT unattended-upgrades、DNF/YUM 自动更新任务；必要软件的首次安装仍保留。此设置不追溯修改已有克隆。PVE/WHMCS 后续覆盖 `ciupgrade` 或 Cloud-Init 配置时，应继续保持 `ciupgrade=0` 和 `package_upgrade=false`。
 
 面向人的入口使用上面的在线命令，不再接收旧命令参数。Agent 自动化使用 [Python helper](AGENT-BOOTSTRAP.md)，由 helper 调用内部构建引擎。镜像校验、VMID 保护和构建验证继续由公共引擎执行。

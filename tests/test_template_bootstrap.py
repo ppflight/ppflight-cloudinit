@@ -108,6 +108,14 @@ def plan_args(**overrides):
 
 
 class CatalogTests(unittest.TestCase):
+    def test_sources_use_dated_releases_not_moving_aliases(self):
+        for spec in bootstrap.URL_SPECS.values():
+            for key in ("url", "checksumUrl"):
+                self.assertNotIn("/latest/", spec[key])
+                self.assertNotIn("-latest.", spec[key])
+                self.assertNotIn("/release/", spec[key])
+            self.assertIn(spec["filename"], spec["url"])
+
     def test_bundled_catalog_is_strict_and_complete(self):
         catalog = bootstrap.load_catalog()
         self.assertEqual(catalog["schemaVersion"], bootstrap.CATALOG_SCHEMA)
@@ -455,7 +463,7 @@ class CLITests(unittest.TestCase):
         )
         value = json.loads(result.stdout)
         self.assertEqual(value["state"], "succeeded")
-        self.assertEqual(value["catalog"]["catalogRevision"], "2026-08-30.1")
+        self.assertEqual(value["catalog"]["catalogRevision"], "2026-09-08.1")
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@
 | 发现 | 风险 | v3处理 |
 |---|---|---|
 | 模板目录硬编码在大段shell数组 | 官网、Agent和builder容易漂移 | 唯一真源改为严格JSON catalog；builder通过验证后的本地helper读取 |
-| 上游`latest/release` URL会变 | 同一模板名称可能静默换镜像 | catalog固定SHA-256、文件最小字节数及官方checksum entry；任一上游漂移先失败 |
+| 上游`latest/release` URL会变 | 同一模板名称可能静默换镜像 | 使用与catalog对应的官方日期版URL；固定SHA-256、文件最小字节数及官方checksum entry，校验不符仍失败 |
 | 旧脚本可自动`pvesm set`追加snippets | 无计划修改集群级storage配置 | 删除自动修改；discovery只返回typed reason和`automatic=false`的安全argv建议，执行前强制`iso+snippets` |
 | storage只有下载/模板两种角色 | 无法明确选择和验证备份落点 | 增加显式image/template/backup三角色及content/active/enabled/space检查 |
 | 单Raw builder可脱离其目录数据运行 | 执行文件与目录/摘要版本不一致 | v3 builder必须与catalog/helper同bundle；发布manifest固定每个runtime文件摘要 |
@@ -36,6 +36,6 @@
 - 构建锁只覆盖本节点；同一PVE集群不要在多个节点同时执行相同VMID catalog。
 - 首次创建不是分布式事务。某个后续模板或备份失败时，已成功的新模板会保留并在per-item result中报告；helper不会用自动删除扩大故障。
 - 备份成功不等于恢复演练完成。生产前仍需从backup storage测试恢复。
-- 固定catalog在发行版更新镜像后会安全失败，需要发布新`catalogRevision`和Agent bundle；不得只改摘要绕过review。
+- 日期版镜像被上游删除或替换时仍会安全失败；升级镜像需要发布新`catalogRevision`和Agent bundle，不得只改摘要绕过review。
 - Debian官方入口会选择HTTPS镜像节点；manifest把初始主机和upstream redirect policy分开声明，重定向内容仍必须通过两层固定摘要，不能把`networkHosts`误用为完整静态防火墙allowlist。
 - Cloud-Init首次启动仍依赖客户网络和发行版软件源安装guest工具。

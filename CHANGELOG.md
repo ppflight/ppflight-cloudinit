@@ -2,6 +2,9 @@
 
 ## 2026-09-08 — 交互安装入口
 
+- 七个镜像源固定为与 catalog 校验值匹配的官方日期版，修复 AlmaLinux、Debian、CentOS 的 `latest` 更新造成的校验中断；保持原始镜像 SHA 不变。
+- 克隆系统关闭 Cloud-Init 升级及自动重启，禁用 APT unattended-upgrades 和 DNF/YUM 自动更新任务；保留必要软件安装与手动更新。
+
 - 菜单支持回车默认值：模板 `ALL`、存储第 `1` 项，显示配置后的安装确认默认 `Yes`；输入 `n` 可取消。
 
 - 修复 PVE 8.4 上 `pvesm status/list --output-format json` 不受支持的问题：存储状态和备份清单改用 `pvesh` 节点 JSON API，存储发现失败时展示具体错误。

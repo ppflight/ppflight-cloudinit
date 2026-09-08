@@ -424,13 +424,26 @@ growpart:
   devices: ['/']
   ignore_growroot_disabled: false
 resize_rootfs: true
-package_update: true
+package_update: false
+package_upgrade: false
+package_reboot_if_required: false
+bootcmd:
+  - [systemctl, mask, apt-daily.timer, apt-daily-upgrade.timer, apt-daily.service, apt-daily-upgrade.service, unattended-upgrades.service]
+  - [sh, -c, "systemctl stop apt-daily.timer apt-daily-upgrade.timer apt-daily.service apt-daily-upgrade.service unattended-upgrades.service 2>/dev/null || true"]
 packages:
   - qemu-guest-agent
   - vim
   - curl
   - net-tools
 write_files:
+  - path: /etc/apt/apt.conf.d/99zz-ppflight-no-auto-upgrades
+    owner: root:root
+    permissions: '0644'
+    content: |
+      APT::Periodic::Enable "0";
+      APT::Periodic::Update-Package-Lists "0";
+      APT::Periodic::Download-Upgradeable-Packages "0";
+      APT::Periodic::Unattended-Upgrade "0";
   - path: /etc/ssh/sshd_config.d/00-ppflight-cloud.conf
     owner: root:root
     permissions: '0644'
@@ -483,7 +496,12 @@ growpart:
   devices: ['/']
   ignore_growroot_disabled: false
 resize_rootfs: true
-package_update: true
+package_update: false
+package_upgrade: false
+package_reboot_if_required: false
+bootcmd:
+  - [systemctl, mask, dnf-automatic.timer, dnf-automatic.service, dnf-automatic-download.timer, dnf-automatic-download.service, dnf-automatic-install.timer, dnf-automatic-install.service, dnf-automatic-notifyonly.timer, dnf-automatic-notifyonly.service, yum-cron.service]
+  - [sh, -c, "systemctl stop dnf-automatic.timer dnf-automatic.service dnf-automatic-download.timer dnf-automatic-download.service dnf-automatic-install.timer dnf-automatic-install.service dnf-automatic-notifyonly.timer dnf-automatic-notifyonly.service yum-cron.service 2>/dev/null || true"]
 packages:
   - qemu-guest-agent
   - chrony
@@ -491,6 +509,13 @@ packages:
   - curl
   - net-tools
 write_files:
+  - path: /etc/dnf/automatic.conf
+    owner: root:root
+    permissions: '0644'
+    content: |
+      [commands]
+      download_updates = no
+      apply_updates = no
   - path: /etc/ssh/sshd_config.d/00-ppflight-cloud.conf
     owner: root:root
     permissions: '0644'
@@ -721,6 +746,7 @@ verify_template() {
   [[ "$family" == "rhel" ]] && expected_snippet="$RHEL_SNIPPET"
   config="$(qm config "$vmid")"
   grep -qx 'template: 1' <<< "$config" || die "$vmid is not a template"
+  grep -qx 'ciupgrade: 0' <<< "$config" || die "$vmid has Cloud-Init automatic upgrades enabled"
   grep -qx "name: $name" <<< "$config" || die "$vmid has unexpected name"
   grep -Eq '^tags: .*ppflight-cloudinit([;,]|$)' <<< "$config" || die "$vmid is missing the project tag"
   grep -q '^agent: enabled=1' <<< "$config" || die "$vmid does not have QEMU Agent enabled"
