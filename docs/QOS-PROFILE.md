@@ -17,7 +17,7 @@ QoS写入Proxmox模板及克隆VM的真实数据磁盘配置，由宿主机QEMU�
 | Burst写IOPS | 6000 | 短时随机写峰值 |
 | IOPS Burst窗口 | 读写均30秒 | 随机I/O突发窗口 |
 
-本档位已写入`build-cloud-templates.sh`，也可以由WHMCS在克隆后按产品档位覆盖。
+本档位已写入`tools/build-template-engine.sh`，也可以由WHMCS在克隆后按产品档位覆盖。
 
 ## 重要限制
 

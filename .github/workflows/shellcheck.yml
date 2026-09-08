@@ -15,7 +15,11 @@ jobs:
       - name: Install ShellCheck
         run: sudo apt-get update && sudo apt-get install -y shellcheck
       - name: Check shell scripts
-        run: shellcheck build-cloud-templates.sh
+        run: shellcheck -x build-cloud-templates.sh tools/build-template-engine.sh
+      - name: Test template catalog and Agent contract
+        run: python3 -m unittest discover -s tests -v
+      - name: Test interactive menus
+        run: bash tests/test_interactive.sh
       - name: Reject committed private keys
         run: |
           if git grep -nE 'BEGIN (OPENSSH |RSA |EC )?PRIVATE KEY'; then

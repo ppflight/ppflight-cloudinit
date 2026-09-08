@@ -30,3 +30,5 @@ cloud-images-cache/
 Thumbs.db
 .idea/
 .vscode/
+__pycache__/
+*.py[cod]
