@@ -27,7 +27,10 @@ printf 'Interactive menu tests passed.\n'
 # A previously exported backup target/config cannot enable template backups.
 BACKUP_STORAGE=backups
 CONFIG_FILE=/does-not-exist
+host_policy_applied=0
+disable_pve_auto_updates() { host_policy_applied=1; }
 main() {
+  [[ "$host_policy_applied" == 1 ]]
   [[ "$*" == --no-backup ]]
   [[ -z "$BACKUP_STORAGE" && -z "${CONFIG_FILE:-}" ]]
   CREATED_VMIDS=(9000)

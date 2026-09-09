@@ -87,12 +87,46 @@ confirm_install() {
   done
 }
 
+host_update_policy() {
+  cat <<'EOF'
+// Managed by ppflight-cloudinit: host upgrades are manual.
+APT::Periodic::Enable "0";
+APT::Periodic::Update-Package-Lists "0";
+APT::Periodic::Download-Upgradeable-Packages "0";
+APT::Periodic::Unattended-Upgrade "0";
+Unattended-Upgrade::Automatic-Reboot "false";
+EOF
+}
+
+disable_pve_auto_updates() {
+  local temporary unit state
+  local -a timers=(apt-daily.timer apt-daily-upgrade.timer)
+  local -a services=(apt-daily.service apt-daily-upgrade.service unattended-upgrades.service)
+  require_command systemctl
+  temporary="$(mktemp)" || die '无法创建宿主机更新配置临时文件'
+  host_update_policy > "$temporary"
+  if ! install -m 0644 "$temporary" /etc/apt/apt.conf.d/99zz-ppflight-host-no-auto-upgrades; then
+    rm -f -- "$temporary"
+    die '写入 PVE 宿主机自动更新配置失败'
+  fi
+  rm -f -- "$temporary"
+  systemctl mask --now "${timers[@]}" || die '关闭 APT 自动更新定时器失败'
+  # Do not interrupt dpkg or a package upgrade that is already running.
+  systemctl mask "${services[@]}" || die '屏蔽 APT 自动更新服务失败'
+  for unit in "${timers[@]}" "${services[@]}"; do
+    state="$(systemctl is-enabled "$unit" 2>/dev/null || true)"
+    [[ "$state" == masked ]] || die "宿主机自动更新服务未正确屏蔽：$unit"
+  done
+  log '已关闭 PVE 宿主机后台自动升级；保留手动更新及 PVE 证书续期'
+}
+
 run_template_build() {
   unset CONFIG_FILE
   CACHE_DIR=''
   BACKUP_STORAGE=''
   REPLACE_EXISTING=0
   FORCE_REPLACE_UNMANAGED=0
+  disable_pve_auto_updates
   main --no-backup
 }
 
@@ -113,6 +147,7 @@ interactive_main() {
   choose_storage template '选择模板安装位置（images）' IMAGE_STORAGE
   printf '\n制作配置：模板=%s，镜像=%s，安装位置=%s\n' \
     "$ONLY_TEMPLATES" "$FILE_STORAGE" "$IMAGE_STORAGE"
+  printf '将关闭本机 PVE 的后台自动升级（手动更新仍可用）。\n'
   confirm_install || return 0
   run_template_build
 }

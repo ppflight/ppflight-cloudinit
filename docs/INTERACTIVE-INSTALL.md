@@ -40,7 +40,29 @@ curl -fsSL https://raw.githubusercontent.com/ppflight/ppflight-cloudinit/main/in
 
 启动程序从 GitHub 下载完整版本快照并核对运行文件摘要。菜单从当前终端读取输入，因此 `curl | bash` 不影响选择操作。程序退出后清理临时安装文件；镜像缓存和模板保留在所选 PVE 存储。
 
-## 再次运行
+## PVE 宿主机自动更新
+
+确认开始制作后，脚本会先对当前 PVE 宿主机应用以下持久设置：
+
+- 写入 `/etc/apt/apt.conf.d/99zz-ppflight-host-no-auto-upgrades`，禁用 APT 周期更新、无人值守升级及无人值守自动重启。
+- 停止并屏蔽 `apt-daily.timer`、`apt-daily-upgrade.timer`。
+- 屏蔽 `apt-daily.service`、`apt-daily-upgrade.service`、`unattended-upgrades.service` 的后续启动，并检查屏蔽状态。
+
+正在执行的包管理操作会继续完成，避免打断 dpkg。取消制作确认不会修改宿主机；确认后即使模板制作失败，该设置也会保留。集群内其他节点不会被修改。
+
+手动通过 PVE 界面或 APT 更新仍然可用。`pve-daily-update` 保留，因为它还负责日常维护和 ACME 证书续期；因此仍可能看到 PVE 刷新可用更新列表。[PVE 官方文档](https://pve.proxmox.com/pve-docs/pve-admin-guide.html#sysadmin_certs_acme)说明了证书自动续期与此服务的关系。自行编写的 cron/第三方升级脚本不在本功能管理范围内。
+
+若以后要恢复 APT 定时更新，可在宿主机执行：
+
+```bash
+rm -f /etc/apt/apt.conf.d/99zz-ppflight-host-no-auto-upgrades
+systemctl unmask apt-daily.timer apt-daily-upgrade.timer apt-daily.service apt-daily-upgrade.service unattended-upgrades.service
+systemctl enable --now apt-daily.timer apt-daily-upgrade.timer
+```
+
+恢复后的自动升级行为取决于原来的 APT/unattended-upgrades 配置。再次使用一键制作入口会重新应用关闭策略。
+
+## 再次运行在线入口
 
 再次执行同一条命令即可获取当前版本：
 

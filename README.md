@@ -16,6 +16,8 @@ curl -fsSL https://raw.githubusercontent.com/ppflight/ppflight-cloudinit/main/in
 
 完整操作示例、升级和常见问题见 [交互安装指南](docs/INTERACTIVE-INSTALL.md)，版本变化见 [CHANGELOG](CHANGELOG.md)。
 
+确认开始制作后，自动关闭本机 PVE 的 APT 后台更新/无人值守升级及自动重启，并屏蔽相关定时器和服务。手动更新、PVE 日常维护和证书续期保留；已在执行的包管理操作不会被强行终止。此设置持久保存，即使后续模板制作失败也会保留。详情与恢复方式见安装指南。
+
 | VMID | 模板 |
 |---|---|
 | 9000 | Ubuntu 22.04 |
