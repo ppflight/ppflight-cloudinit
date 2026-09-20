@@ -2,7 +2,7 @@
 
 ## 准备
 
-在 Proxmox VE 8/9 宿主机的交互终端中以 root 运行。需要能访问发行版镜像站，并已配置 `vmbr0` 网桥和下列存储：
+在 Proxmox VE 8/9 宿主机的交互终端中以 root 运行。需要能访问发行版镜像站，并已配置在线的客户业务 Linux 网桥和下列存储：
 
 | 菜单 | 存储用途 | PVE 内容类型 |
 |---|---|---|
@@ -19,11 +19,15 @@
 curl -fsSL https://raw.githubusercontent.com/ppflight/ppflight-cloudinit/main/install.sh | bash
 ```
 
-依次完成三步，随后显示配置并提示开始安装（回车默认 Yes，输入 n 取消）：
+依次完成以下选择，随后显示配置并提示开始安装（回车默认 Yes，输入 n 取消）：
 
 1. 回车默认 `ALL` 安装全部模板，或输入 `9000,9001` / `9000 9001` 选择模板。重复 VMID 自动去重。
 2. 输入镜像下载存储的菜单序号（回车默认第 1 项）。
 3. 输入模板安装位置存储的菜单序号（回车默认第 1 项）。
+4. 查看业务网桥列表，选择序号。唯一无宿主地址／默认路由、有上联的在线候选提供回车推荐；多个候选必须明确选择。带宿主地址或默认路由的网桥提示风险，需额外输入 `USE` 才能选用。
+5. 对 VLAN-aware 网桥选择允许范围内的 VLAN，输入 `0` 不打标签；只有一个允许 VLAN 时默认该 VLAN。普通网桥使用无标签网络。
+
+这里只选择模板虚拟网卡所接网桥，不修改 PVE 物理网卡、bond、网桥或防火墙总开关。宿主地址可能用于其他用途，推荐不代表已验证实际接线。构建前会重新读取网桥状态及 VLAN 范围，配置变更后失效则停止。
 
 示例选择过程（序号取决于本机实际存储列表）：
 
@@ -33,7 +37,12 @@ curl -fsSL https://raw.githubusercontent.com/ppflight/ppflight-cloudinit/main/in
 选择序号：1
 选择模板安装位置（images）
 选择序号：2
-制作配置：模板=9000,9001，镜像=local，安装位置=raid-zfs
+选择客户 VPS 业务网桥
+  1) vmbr0  管理网络风险：10.128.93.33/24 / nic0
+  2) vmbr1  业务候选：bond0 / VLAN2100
+网桥序号：2
+客户 VLAN [2100]：
+制作配置：模板=9000,9001，镜像=local，安装位置=vpspool，网桥=vmbr1，VLAN=2100
 ```
 
 脚本校验官方镜像后创建模板，再验证制作结果。此流程不备份模板、不从旧备份执行 `qmrestore`。VPS 备份目标在后续 PVE/WHMCS 备份任务中配置，不随模板克隆继承。
@@ -88,3 +97,9 @@ curl -fsSL https://raw.githubusercontent.com/ppflight/ppflight-cloudinit/main/in
 新模板默认关闭克隆系统自动升级与自动重启，并屏蔽 APT unattended-upgrades、DNF/YUM 自动更新任务；必要软件的首次安装仍保留。此设置不追溯修改已有克隆。PVE/WHMCS 后续覆盖 `ciupgrade` 或 Cloud-Init 配置时，应继续保持 `ciupgrade=0` 和 `package_upgrade=false`。
 
 面向人的入口使用上面的在线命令，不再接收旧命令参数。Agent 自动化使用 [Python helper](AGENT-BOOTSTRAP.md)，由 helper 调用内部构建引擎。镜像校验、VMID 保护和构建验证继续由公共引擎执行。
+
+## 模板网络配置
+
+当前 PPFlight 两台 PVE 建议选择 `vmbr1`、VLAN `2100`，模板网卡为 `virtio,bridge=vmbr1,firewall=1,tag=2100`。官网正式绑定的网桥和 VLAN 应与此一致；后续开通仍以官网网络附件配置为准。`vmbr0` 留给管理访问。
+
+直接使用内部构建引擎时，可设置 `BRIDGE`、`VLAN_TAG`，或使用 `--bridge vmbr1 --vlan-id 2100`；`--vlan-id 0` 为无标签。内部引擎未指定网桥时保留历史 `vmbr0` 默认值以兼容已有调用，但也会检查网桥在线状态。Agent v1 接口不新增 VLAN 字段，并清理继承的 `VLAN_TAG` 环境变量，避免改变既有 Agent 请求含义。

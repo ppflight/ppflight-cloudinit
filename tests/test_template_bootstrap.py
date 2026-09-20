@@ -198,6 +198,7 @@ class CatalogTests(unittest.TestCase):
                 "build-cloud-templates.sh",
                 "tools/ppflight-template-bootstrap.py",
                 "tools/build-template-engine.sh",
+                "tools/template-network.py",
                 "catalog/template-catalog.v1.json",
                 "catalog/template-catalog.schema.json",
                 "contracts/template-bootstrap-request.schema.json",
@@ -404,6 +405,7 @@ class DiscoveryAndPlanTests(unittest.TestCase):
         hostile = {
             "REPLACE_EXISTING": "1",
             "CONFIG_FILE": "/tmp/attacker",
+            "VLAN_TAG": "2102",
             "BASH_FUNC_curl%%": "() { echo attacker; }",
             "LD_AUDIT": "/tmp/attacker.so",
             "SSLKEYLOGFILE": "/tmp/tls-keys",

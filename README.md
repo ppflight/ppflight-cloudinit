@@ -11,8 +11,9 @@ curl -fsSL https://raw.githubusercontent.com/ppflight/ppflight-cloudinit/main/in
 1. **模板**：输入 VMID；多个用空格或逗号分隔，`ALL` 全选。
 2. **镜像下载位置**：选择保存云镜像和 Cloud-Init snippets 的存储。
 3. **模板安装位置**：选择存放模板系统盘的存储。
+4. **业务网桥与 VLAN**：查看网桥的上联、宿主地址和允许 VLAN，选择客户 VPS 使用的网络。
 
-回车默认：模板 `ALL`、存储第 `1` 项、开始安装 `Yes`。选完显示配置，按回车开始下载、校验和制作模板；输入 `n` 取消。无需命令参数，输入错误会重新提示，结束输入会取消安装。
+回车默认：模板 `ALL`、存储第 `1` 项、开始安装 `Yes`。网桥只有唯一无宿主地址且有上联的在线候选时提供回车推荐，多个候选必须明确选择。选完显示配置，按回车开始下载、校验和制作模板；输入 `n` 取消。无需命令参数，输入错误会重新提示，结束输入会取消安装。
 
 完整操作示例、升级和常见问题见 [交互安装指南](docs/INTERACTIVE-INSTALL.md)，版本变化见 [CHANGELOG](CHANGELOG.md)。
 
@@ -28,7 +29,9 @@ curl -fsSL https://raw.githubusercontent.com/ppflight/ppflight-cloudinit/main/in
 | 9005 | CentOS Stream 9 |
 | 9006 | CentOS Stream 10 |
 
-菜单显示已启用、在线且支持对应用途的 PVE 存储及剩余空间。镜像位置须支持 `iso,snippets`，安装目标须支持 `images`。没有合格存储时停止，请先在 PVE 配置相应内容类型。默认网桥为 `vmbr0`。
+菜单显示已启用、在线且支持对应用途的 PVE 存储及剩余空间。镜像位置须支持 `iso,snippets`，安装目标须支持 `images`。没有合格存储时停止，请先在 PVE 配置相应内容类型。网桥不再固定选择 `vmbr0`：带宿主地址或默认路由的网桥会提示管理网络风险，选用时需输入 `USE` 确认；离线网桥不能选。VLAN-aware 网桥支持选择允许范围内的 VLAN，输入 `0` 使用无标签网络。
+
+**PPFlight 当前双网桥示例**：`vmbr0` 是管理网，`vmbr1 → bond0` 是客户业务网，网桥仅允许 VLAN2100 时菜单推荐 `vmbr1` 和 `2100`；新模板 net0 将包含 `bridge=vmbr1,tag=2100,firewall=1`。用途推荐依据本机配置，仍须核对实际接线；脚本不修改宿主机网络、不启用全局 PVE 防火墙。
 
 镜像固定到官方日期版地址，并同时验证目录 SHA-256 和官方 checksum，避免 `latest` 更新导致安装中断。
 

@@ -7,12 +7,12 @@
   "files": [
     {
       "path": "build-cloud-templates.sh",
-      "sha256": "cdb8f7cf7df1bfc2a419b9fa130c8921a1d48555afa952e289bcd1124b5f1ee8",
+      "sha256": "32890702b558e60dd9e498771aef6c97a0d343cf5a081c55db4ac9f44e6908c1",
       "requiredAtRuntime": true
     },
     {
       "path": "tools/ppflight-template-bootstrap.py",
-      "sha256": "32bbfdb87c39befe852b6ca6ebf7249bb9cdcdf6879a42d962c4fea2bce8e792",
+      "sha256": "a2575980d10a8d7ad02f0b2d9e0071197350bed706818c4824f12a27675cec2e",
       "requiredAtRuntime": true
     },
     {
@@ -47,7 +47,12 @@
     },
     {
       "path": "tools/build-template-engine.sh",
-      "sha256": "7a5f793f62a248f0ee17a3a42153af883a4a5d68f5eb1adf12c0a9fc73b4a0ca",
+      "sha256": "f18011c893bcda6009c6a1b7f6c190a15350c4d510082d2c660632808f36d711",
+      "requiredAtRuntime": true
+    },
+    {
+      "path": "tools/template-network.py",
+      "sha256": "59df88021cb16294ad5eb2da76bbbc959385e2049ced9660b29cb37ca259e37d",
       "requiredAtRuntime": true
     }
   ],

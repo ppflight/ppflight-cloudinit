@@ -11,6 +11,7 @@ readonly CATALOG_HELPER
 IMAGE_STORAGE="${IMAGE_STORAGE:-}"
 FILE_STORAGE="${FILE_STORAGE:-local}"
 BRIDGE="${BRIDGE:-vmbr0}"
+VLAN_TAG="${VLAN_TAG:-}"
 CACHE_DIR="${CACHE_DIR:-}"
 DISK_SIZE="${DISK_SIZE:-16G}"
 MEMORY_MB="${MEMORY_MB:-2048}"
@@ -76,6 +77,7 @@ Options:
   --no-backup         Explicitly skip template backups (the compatibility default).
   --cache-dir PATH    Override the cloud-image download cache path.
   --bridge NAME       PVE bridge used by template net0.
+  --vlan-id ID        VLAN tag 1-4094; 0 means untagged.
   --replace           Replace existing project-managed templates.
   --force-replace-unmanaged
                       With --replace, also replace an untagged template whose
@@ -139,6 +141,12 @@ parse_args() {
       --bridge)
         (($# >= 2)) || die "--bridge requires a bridge name"
         BRIDGE="$2"
+        shift 2
+        ;;
+      --vlan-id)
+        (($# >= 2)) || die "--vlan-id requires an ID"
+        VLAN_TAG="$2"
+        [[ "$VLAN_TAG" != 0 ]] || VLAN_TAG=""
         shift 2
         ;;
       --only)
@@ -353,7 +361,7 @@ preflight() {
     storage_is_active "$BACKUP_STORAGE" || die "backup storage is not active: $BACKUP_STORAGE"
     [[ ",$(storage_content "$BACKUP_STORAGE")," == *",backup,"* ]] || die "$BACKUP_STORAGE does not allow backups"
   fi
-  ip link show "$BRIDGE" >/dev/null 2>&1 || die "bridge not found: $BRIDGE"
+  python3 "$SCRIPT_DIR/tools/template-network.py" validate --bridge "$BRIDGE" --vlan "$VLAN_TAG" || die "bridge/VLAN validation failed"
 
   for pair in MEMORY_MB:"$MEMORY_MB" CORES:"$CORES" BALLOON:"$BALLOON" FIREWALL:"$FIREWALL" DISK_SSD:"$DISK_SSD"; do
     validate_integer "${pair%%:*}" "${pair#*:}"
@@ -687,6 +695,12 @@ disk_qos_suffix() {
   fi
 }
 
+template_net0() {
+  printf 'virtio,bridge=%s,firewall=%s' "$BRIDGE" "$FIREWALL"
+  [[ -z "$VLAN_TAG" || "$VLAN_TAG" == 0 ]] || printf ',tag=%s' "$VLAN_TAG"
+  return 0
+}
+
 create_template() {
   local row="$1" vmid name image _url _checksum_url _algorithm _upstream_expected _source_sha256 _minimum_bytes family placeholder_ip description _version _aliases
   local imported_volume snippet qos description_full
@@ -707,7 +721,7 @@ create_template() {
     --balloon "$BALLOON" \
     --cores "$CORES" \
     --cpu "$CPU_TYPE" \
-    --net0 "virtio,bridge=$BRIDGE,firewall=$FIREWALL" \
+    --net0 "$(template_net0)" \
     --scsihw virtio-scsi-single \
     --serial0 socket \
     --vga std \
@@ -739,12 +753,29 @@ create_template() {
   CURRENT_NAME=""
 }
 
+verify_template_network() {
+  local config="$1" net
+  net="$(sed -n 's/^net0: //p' <<< "$config")"
+  [[ ",$net," == *",bridge=$BRIDGE,"* ]] || die '模板网卡网桥回读不匹配'
+  if [[ "$FIREWALL" == 0 ]]; then
+    [[ ",$net," != *",firewall="* || ",$net," == *",firewall=0,"* ]] || die '模板网卡防火墙标记回读不匹配'
+  else
+    [[ ",$net," == *",firewall=$FIREWALL,"* ]] || die '模板网卡防火墙标记回读不匹配'
+  fi
+  if [[ -n "$VLAN_TAG" && "$VLAN_TAG" != 0 ]]; then
+    [[ ",$net," == *",tag=$VLAN_TAG,"* ]] || die '模板网卡 VLAN 回读不匹配'
+  else
+    [[ ",$net," != *",tag="* ]] || die '无标签模板出现了 VLAN 标签'
+  fi
+}
+
 verify_template() {
   local row="$1" vmid name _image _url _checksum _algorithm _upstream_expected _source_sha256 _minimum_bytes family config disk cloudinit_disk field expected_snippet
   IFS='|' read -r vmid name _image _url _checksum _algorithm _upstream_expected _source_sha256 _minimum_bytes family _ <<< "$row"
   expected_snippet="$DEBIAN_SNIPPET"
   [[ "$family" == "rhel" ]] && expected_snippet="$RHEL_SNIPPET"
   config="$(qm config "$vmid")"
+  verify_template_network "$config"
   grep -qx 'template: 1' <<< "$config" || die "$vmid is not a template"
   grep -qx 'ciupgrade: 0' <<< "$config" || die "$vmid has Cloud-Init automatic upgrades enabled"
   grep -qx "name: $name" <<< "$config" || die "$vmid has unexpected name"
@@ -789,6 +820,7 @@ write_manifest() {
     printf 'built_at_utc=%s\n' "$(date -u '+%FT%TZ')"
     printf 'pve_version=%s\n' "$(pveversion)"
     printf 'image_storage=%s\nfile_storage=%s\nbridge=%s\n' "$IMAGE_STORAGE" "$FILE_STORAGE" "$BRIDGE"
+    printf 'vlan_tag=%s\n' "${VLAN_TAG:-untagged}"
     printf 'backup_storage=%s\nbackup_policy=%s\n' "${BACKUP_STORAGE:-disabled}" "$backup_policy"
     printf 'debian_snippet=%s\nrhel_snippet=%s\n' "$DEBIAN_SNIPPET" "$RHEL_SNIPPET"
     printf 'disk_size=%s\ndisk_ssd=%s\nmemory_mb=%s\ncores=%s\ncpu_type=%s\nqos_enabled=%s\n' "$DISK_SIZE" "$DISK_SSD" "$MEMORY_MB" "$CORES" "$CPU_TYPE" "$ENABLE_QOS"

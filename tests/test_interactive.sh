@@ -37,5 +37,10 @@ main() {
   vzdump() { printf 'Unexpected template backup\n' >&2; exit 1; }
   backup_templates
 }
+# The network helper is exercised separately; this test isolates update/backup policy.
+python3() {
+  [[ "$1" == "$SCRIPT_DIR/tools/template-network.py" && "$2" == validate ]]
+}
 run_template_build
+unset -f python3
 printf 'Template-only build test passed.\n'

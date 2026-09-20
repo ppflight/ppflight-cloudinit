@@ -75,6 +75,40 @@ for s in data["storages"]:
   done
 }
 
+choose_network() {
+  local answer selected management aware allowed default_vlan confirm
+  local helper="$SCRIPT_DIR/tools/template-network.py"
+  NETWORK_DISCOVERY="$(python3 "$helper" discover)" || die '读取节点网桥失败'
+  printf '\n选择客户 VPS 业务网桥（不修改宿主机网桥或物理网卡）\n'
+  python3 "$helper" menu <<< "$NETWORK_DISCOVERY" || die '网桥列表无效'
+  printf '回车仅在存在唯一无宿主地址、有上联的业务候选时选择它；请核对实际接线。\n'
+  while true; do
+    read -r -p '网桥序号：' answer || die '输入已结束，安装取消'
+    if ! selected="$(python3 "$helper" select --index "$answer" <<< "$NETWORK_DISCOVERY")"; then continue; fi
+    IFS='|' read -r BRIDGE management aware allowed default_vlan <<< "$selected"
+    if [[ "$management" == 1 ]]; then
+      printf '警告：%s 带有宿主地址或默认路由，可能是管理网络。\n' "$BRIDGE"
+      read -r -p '确实要让模板接入该网桥？输入 USE 确认，其他输入返回选择：' confirm || die '输入已结束，安装取消'
+      [[ "$confirm" == USE ]] || continue
+    fi
+    VLAN_TAG=''
+    if [[ "$aware" == 1 ]]; then
+      printf '网桥允许 VLAN：%s；输入 0 不打标签。\n' "$allowed"
+      while true; do
+        read -r -p "客户 VLAN [$default_vlan]：" answer || die '输入已结束，安装取消'
+        answer="${answer:-$default_vlan}"
+        if python3 "$helper" validate --bridge "$BRIDGE" --vlan "$answer"; then
+          [[ "$answer" == 0 ]] || VLAN_TAG="$answer"
+          break
+        fi
+      done
+    else
+      printf '%s 未启用 VLAN-aware，模板使用无标签网络。\n' "$BRIDGE"
+    fi
+    return
+  done
+}
+
 confirm_install() {
   local answer
   while true; do
@@ -126,6 +160,7 @@ run_template_build() {
   BACKUP_STORAGE=''
   REPLACE_EXISTING=0
   FORCE_REPLACE_UNMANAGED=0
+  python3 "$SCRIPT_DIR/tools/template-network.py" validate --bridge "$BRIDGE" --vlan "$VLAN_TAG" || die '所选网桥或 VLAN 已失效'
   disable_pve_auto_updates
   main --no-backup
 }
@@ -145,8 +180,9 @@ interactive_main() {
   fi
   choose_storage image '选择镜像下载位置（iso、snippets）' FILE_STORAGE
   choose_storage template '选择模板安装位置（images）' IMAGE_STORAGE
-  printf '\n制作配置：模板=%s，镜像=%s，安装位置=%s\n' \
-    "$ONLY_TEMPLATES" "$FILE_STORAGE" "$IMAGE_STORAGE"
+  choose_network
+  printf '\n制作配置：模板=%s，镜像=%s，安装位置=%s，网桥=%s，VLAN=%s\n' \
+    "$ONLY_TEMPLATES" "$FILE_STORAGE" "$IMAGE_STORAGE" "$BRIDGE" "${VLAN_TAG:-无标签}"
   printf '将关闭本机 PVE 的后台自动升级（手动更新仍可用）。\n'
   confirm_install || return 0
   run_template_build

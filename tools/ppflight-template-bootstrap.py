@@ -54,6 +54,7 @@ BUILDER_SETTING_KEYS = {
     "FILE_STORAGE",
     "BACKUP_STORAGE",
     "BRIDGE",
+    "VLAN_TAG",
     "CACHE_DIR",
     "DISK_SIZE",
     "MEMORY_MB",
