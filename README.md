@@ -65,3 +65,10 @@ Ubuntu 官方镜像自带的 Snap 有独立后台刷新机制，因此默认同�
 Debian/Ubuntu 镜像扩容后会重新安装 BIOS GRUB，并在内核启动阶段使用 `eth0`，避免新版本 Cloud-init 对已启用网卡重命名失败。RHEL 系在离线镜像内使用系统自带的 `setfiles` 和当前 SELinux 策略完整重标记；隔离启动还要求 SELinux 保持 Enforcing，不通过关闭防护来兼容更新。
 
 **RHEL 系 QGA 权限边界**：官网需要通过 QGA 执行 root 级网络和时区配置，因此为 `qemu-guest-agent.service` 单独设置 `SELinuxContext=system_u:system_r:unconfined_service_t:s0`。这意味着 QGA 及其管理命令不再受默认 QGA SELinux 域限制；虚拟机全局仍是 Enforcing，其他服务保持发行版策略，QGA RPC 清单仍保留文件接口等默认限制。PVE 管理权限必须作为 root 管理权限保护。
+
+## 启动方式（3.2.0）
+
+9000–9009 使用 OVMF UEFI；EFI 变量盘采用 `efitype=4m,pre-enrolled-keys=0`，与系统盘放在同一所选存储（例如 `vpspool`），关闭 Secure Boot。
+9010 为 Ubuntu 24.04 LTS Legacy，9011 为 Debian 12 Legacy，使用 SeaBIOS，不创建 EFI 变量盘。
+
+制作器先检查 UEFI 镜像的 EFI 系统分区和 fallback 引导文件，再以全新 OVMF 变量盘启动独立 overlay，验证实际启动模式、Secure Boot 关闭、QGA、Cloud-init 和根分区容量；Legacy 镜像另以 BIOS 启动验证。全部选定镜像通过后才替换旧模板。已有克隆依赖时仍拒绝替换，不把已有 VPS 原地转换启动方式。

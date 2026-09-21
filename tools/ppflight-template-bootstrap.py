@@ -344,12 +344,12 @@ def load_catalog(path: Path = CATALOG_PATH) -> Dict[str, Any]:
         if upstream["algorithm"] == "sha256" and upstream_value != sha256:
             raise ContractError("CATALOG_DIGEST_MISMATCH", "source sha256 differs from upstream SHA-256", {"templateRef": template_ref})
 
-        target = _require_keys(item["target"], ("vmid", "osType", "diskBus", "agentEnabled"), f"{context}.target")
+        target = _require_keys(item["target"], ("vmid", "osType", "diskBus", "agentEnabled", "firmware"), f"{context}.target")
         vmid = target["vmid"]
         if isinstance(vmid, bool) or not isinstance(vmid, int) or not 100 <= vmid <= 999999999 or vmid in vmids:
             raise ContractError("CATALOG_VMID_INVALID", "target VMID must be unique and in PVE range", {"vmid": vmid})
         vmids.add(vmid)
-        if target["osType"] != "l26" or target["diskBus"] != "scsi0" or target["agentEnabled"] is not True:
+        if target["firmware"] not in ("ovmf", "seabios") or target["osType"] != "l26" or target["diskBus"] != "scsi0" or target["agentEnabled"] is not True:
             raise ContractError("CATALOG_TARGET_UNSUPPORTED", "target settings are not supported", {"templateRef": template_ref})
         if isinstance(item["minimumBytes"], bool) or not isinstance(item["minimumBytes"], int) or item["minimumBytes"] < 64 * 1024 * 1024:
             raise ContractError("CATALOG_MINIMUM_BYTES_INVALID", "minimumBytes is too small", {"templateRef": template_ref})
@@ -432,6 +432,7 @@ def catalog_rows(catalog: Mapping[str, Any]) -> List[str]:
             item["build"]["description"],
             item["version"],
             ",".join(item["aliases"]),
+            item["target"]["firmware"],
         )
         if any("|" in field or "\n" in field or "\r" in field for field in fields):
             raise ContractError("CATALOG_ROW_UNSAFE", "catalog contains a reserved row character", {"templateRef": item["templateRef"]})

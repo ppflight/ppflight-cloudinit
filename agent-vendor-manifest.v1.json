@@ -1,8 +1,8 @@
 {
   "schemaVersion": "ppflight.agent-vendor-manifest/v1",
-  "bundleVersion": "3.1.2",
-  "catalogRevision": "2026-09-21.1",
-  "catalogSha256": "e2391d87fd912867c7e79bd5e4b50a4e4783d04249940df6c9e8af886ddc27d5",
+  "bundleVersion": "3.2.0",
+  "catalogRevision": "2026-09-21.2",
+  "catalogSha256": "6343b841268e2973b8a8e7ce505f788444b298afd4593eb09b78132447df99c9",
   "entrypoint": "tools/ppflight-template-bootstrap.py",
   "files": [
     {
@@ -12,17 +12,17 @@
     },
     {
       "path": "tools/ppflight-template-bootstrap.py",
-      "sha256": "69b634ccc788fe07b660611b3b3d580d147abbfeac0ff855eb084988913cdb34",
+      "sha256": "567c2e96434153272a656b5e37480d29aa8c211d9c8e90db037a531097353fe6",
       "requiredAtRuntime": true
     },
     {
       "path": "catalog/template-catalog.v1.json",
-      "sha256": "e2391d87fd912867c7e79bd5e4b50a4e4783d04249940df6c9e8af886ddc27d5",
+      "sha256": "6343b841268e2973b8a8e7ce505f788444b298afd4593eb09b78132447df99c9",
       "requiredAtRuntime": true
     },
     {
       "path": "catalog/template-catalog.schema.json",
-      "sha256": "dad62bedb27eee96b39f66f431937b9fbe63ed928750fc3d7743945e85ad9dc1",
+      "sha256": "455ab7e2cfd46a06900cec862d718f656ad7a78299020931c0d664e0b1fe30e7",
       "requiredAtRuntime": true
     },
     {
@@ -47,7 +47,7 @@
     },
     {
       "path": "tools/build-template-engine.sh",
-      "sha256": "49766c5cca21e74130f4e49f438fbf0601e4bea8caa45b776ee33058e1d512d7",
+      "sha256": "8a988eda9494b3991140217ac9130da47c61c42ede238e30eea9bfbf1e646b09",
       "requiredAtRuntime": true
     },
     {
@@ -63,17 +63,17 @@
     {
       "path": "tools/prepare-image.py",
       "requiredAtRuntime": true,
-      "sha256": "d758424911142fee0b9f1587938dc5f6a149f6556732ed0998269a5ea07d9ff4"
+      "sha256": "5eddb3a93e844c43a71b883e9e75dd343783efd3f03fc0bf8f766e945ad97ae2"
     },
     {
       "path": "tools/prepare-guest.sh",
       "requiredAtRuntime": true,
-      "sha256": "ecf4d4973c8cdcb53c3a8baab35035df1afcc02cd8274993e670a5589648b14f"
+      "sha256": "c122b06f81b017908ad24e00d39ae103c462e09498af05edb8c58debf1672a12"
     },
     {
       "path": "tools/verify-guest-boot.py",
       "requiredAtRuntime": true,
-      "sha256": "27cb2654a1c292676bf894b249452402e0785ae5f90a8a7aa28ef46a4a780552"
+      "sha256": "b77c51d301234edddb81a1793e2671bc0789345ddf795269f33249aa09ff5a38"
     },
     {
       "path": "tools/configure-qga.py",

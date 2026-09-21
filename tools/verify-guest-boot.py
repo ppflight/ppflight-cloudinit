@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import socket
 import signal
+import shutil
 import subprocess
 import tempfile
 import time
@@ -32,7 +33,23 @@ def agent(path, command, arguments=None, timeout=5):
                 return result['return']
 
 
-def verify(image, vendor, timeout=360):
+def firmware_arguments(firmware, root, directory=Path('/usr/share/pve-edk2-firmware')):
+    if firmware == 'seabios':
+        return []
+    if firmware != 'ovmf':
+        raise ValueError('Unsupported firmware')
+    code = directory/'OVMF_CODE_4M.fd'
+    variables = directory/'OVMF_VARS_4M.fd'
+    if not code.is_file() or not variables.is_file():
+        raise ValueError('PVE 4m OVMF firmware unavailable')
+    shutil.copyfile(variables, root/'efi-vars.fd')
+    return ['-drive', 'if=pflash,format=raw,unit=0,readonly=on,file='+str(code),
+            '-drive', 'if=pflash,format=raw,unit=1,file='+str(root/'efi-vars.fd')]
+
+
+def verify(image, vendor, timeout=360, firmware="seabios"):
+    if firmware not in ("ovmf", "seabios"):
+        raise ValueError("Unsupported firmware")
     image = Path(image).resolve()
     if not image.is_file() or not Path(vendor).is_file():
         raise ValueError('Missing prepared image or vendor profile')
@@ -57,6 +74,7 @@ def verify(image, vendor, timeout=360):
               '-netdev','user,id=private,restrict=on',
               '-device','virtio-serial','-chardev','socket,path='+str(root/'qga.sock')+',server=on,wait=off,id=qga',
               '-device','virtserialport,chardev=qga,name=org.qemu.guest_agent.0','-no-reboot']
+        args += firmware_arguments(firmware, root)
         with (root/'qemu.log').open('w') as log:
             process=subprocess.Popen(args,stdout=log,stderr=log)
             deadline=time.monotonic()+timeout
@@ -103,6 +121,10 @@ for unit in apt-daily.timer apt-daily-upgrade.timer dnf-automatic.timer dnf-auto
  fi
 done
 '''
+                if firmware == 'ovmf':
+                    script += '\ntest -d /sys/firmware/efi\nsecure_boot=$(od -An -j4 -N1 -t u1 /sys/firmware/efi/efivars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c)\ntest "$secure_boot" -eq 0\n'
+                else:
+                    script += '\ntest ! -d /sys/firmware/efi\n'
                 script += '\nroot_bytes=$(df -B1 --output=size / | tail -1)\ntest "$root_bytes" -ge '+str(virtual_size * 7 // 10)+'\n'
                 execution=agent(root/'qga.sock','guest-exec',{'path':'/bin/sh','arg':['-c',script],'capture-output':True})
                 while time.monotonic()<deadline:
@@ -111,7 +133,7 @@ done
                         output=base64.b64decode(result.get('out-data','')).decode(errors='replace')
                         if result.get('exitcode') != 0:
                             raise RuntimeError('First-boot verification failed (exit '+str(result.get('exitcode'))+'): '+output[-7000:]+'\n'+base64.b64decode(result.get('err-data','')).decode(errors='replace')[-4000:])
-                        return {'qga':'ready','cloudInit':'done','network':'isolated-no-uplink','output':output,'rootFilesystemExpanded':True}
+                        return {'firmware':firmware,'secureBoot':False,'qga':'ready','cloudInit':'done','network':'isolated-no-uplink','output':output,'rootFilesystemExpanded':True}
                     time.sleep(2)
                 raise TimeoutError('Cloud-init verification timed out')
             except BaseException:
@@ -131,8 +153,9 @@ def main():
     p=argparse.ArgumentParser()
     p.add_argument('--image',required=True)
     p.add_argument('--vendor',required=True)
+    p.add_argument('--firmware', choices=['ovmf', 'seabios'], default='seabios')
     args=p.parse_args()
-    result=verify(args.image,args.vendor)
+    result=verify(args.image,args.vendor,firmware=args.firmware)
     Path(args.image).with_suffix('.boot.json').write_text(json.dumps(result,indent=2)+'\n')
     print('Isolated boot passed: QGA ready; cloud-init completed; automatic updates disabled')
 

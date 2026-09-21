@@ -1,14 +1,14 @@
 {
   "schemaVersion": "ppflight.template-catalog/v1",
   "catalogId": "ppflight-proxmox-templates",
-  "catalogRevision": "2026-09-21.1",
+  "catalogRevision": "2026-09-21.2",
   "issuedAt": "2026-09-21T02:15:00Z",
   "websitePath": "/vps/proxmox-templates",
   "items": [
     {
       "templateRef": "ubuntu-2204",
       "version": "22.04",
-      "displayName": "Ubuntu 22.04 LTS",
+      "displayName": "Ubuntu 22.04 LTS UEFI",
       "aliases": [
         "ubuntu-22.04",
         "ubuntu-jammy"
@@ -29,7 +29,8 @@
         "vmid": 9000,
         "osType": "l26",
         "diskBus": "scsi0",
-        "agentEnabled": true
+        "agentEnabled": true,
+        "firmware": "ovmf"
       },
       "minimumBytes": 734972416,
       "build": {
@@ -42,7 +43,7 @@
     {
       "templateRef": "ubuntu-2404",
       "version": "24.04",
-      "displayName": "Ubuntu 24.04 LTS",
+      "displayName": "Ubuntu 24.04 LTS UEFI",
       "aliases": [
         "ubuntu-24.04",
         "ubuntu-noble"
@@ -63,7 +64,8 @@
         "vmid": 9001,
         "osType": "l26",
         "diskBus": "scsi0",
-        "agentEnabled": true
+        "agentEnabled": true,
+        "firmware": "ovmf"
       },
       "minimumBytes": 624829952,
       "build": {
@@ -76,7 +78,7 @@
     {
       "templateRef": "almalinux-8",
       "version": "8",
-      "displayName": "AlmaLinux 8",
+      "displayName": "AlmaLinux 8 UEFI",
       "aliases": [
         "alma-8",
         "alma8"
@@ -97,7 +99,8 @@
         "vmid": 9002,
         "osType": "l26",
         "diskBus": "scsi0",
-        "agentEnabled": true
+        "agentEnabled": true,
+        "firmware": "ovmf"
       },
       "minimumBytes": 1630273536,
       "build": {
@@ -110,7 +113,7 @@
     {
       "templateRef": "debian-13",
       "version": "13",
-      "displayName": "Debian 13",
+      "displayName": "Debian 13 UEFI",
       "aliases": [
         "debian-trixie",
         "trixie"
@@ -131,7 +134,8 @@
         "vmid": 9003,
         "osType": "l26",
         "diskBus": "scsi0",
-        "agentEnabled": true
+        "agentEnabled": true,
+        "firmware": "ovmf"
       },
       "minimumBytes": 433651712,
       "build": {
@@ -144,7 +148,7 @@
     {
       "templateRef": "debian-12",
       "version": "12",
-      "displayName": "Debian 12",
+      "displayName": "Debian 12 UEFI",
       "aliases": [
         "debian-bookworm",
         "bookworm"
@@ -165,7 +169,8 @@
         "vmid": 9004,
         "osType": "l26",
         "diskBus": "scsi0",
-        "agentEnabled": true
+        "agentEnabled": true,
+        "firmware": "ovmf"
       },
       "minimumBytes": 449511424,
       "build": {
@@ -178,7 +183,7 @@
     {
       "templateRef": "centos-stream-9",
       "version": "9-stream",
-      "displayName": "CentOS Stream 9",
+      "displayName": "CentOS Stream 9 UEFI",
       "aliases": [
         "centos-9-stream",
         "centos9-stream"
@@ -199,7 +204,8 @@
         "vmid": 9005,
         "osType": "l26",
         "diskBus": "scsi0",
-        "agentEnabled": true
+        "agentEnabled": true,
+        "firmware": "ovmf"
       },
       "minimumBytes": 1277493248,
       "build": {
@@ -212,7 +218,7 @@
     {
       "templateRef": "centos-stream-10",
       "version": "10-stream",
-      "displayName": "CentOS Stream 10",
+      "displayName": "CentOS Stream 10 UEFI",
       "aliases": [
         "centos-10-stream",
         "centos10-stream"
@@ -233,7 +239,8 @@
         "vmid": 9006,
         "osType": "l26",
         "diskBus": "scsi0",
-        "agentEnabled": true
+        "agentEnabled": true,
+        "firmware": "ovmf"
       },
       "minimumBytes": 1047003136,
       "build": {
@@ -246,7 +253,7 @@
     {
       "templateRef": "almalinux-9",
       "version": "9",
-      "displayName": "AlmaLinux 9",
+      "displayName": "AlmaLinux 9 UEFI",
       "aliases": [
         "alma-9",
         "alma9"
@@ -267,7 +274,8 @@
         "vmid": 9007,
         "osType": "l26",
         "diskBus": "scsi0",
-        "agentEnabled": true
+        "agentEnabled": true,
+        "firmware": "ovmf"
       },
       "minimumBytes": 589299712,
       "build": {
@@ -280,7 +288,7 @@
     {
       "templateRef": "rocky-9",
       "version": "9",
-      "displayName": "Rocky Linux 9",
+      "displayName": "Rocky Linux 9 UEFI",
       "aliases": [
         "rockylinux-9"
       ],
@@ -300,7 +308,8 @@
         "vmid": 9008,
         "osType": "l26",
         "diskBus": "scsi0",
-        "agentEnabled": true
+        "agentEnabled": true,
+        "firmware": "ovmf"
       },
       "minimumBytes": 645988352,
       "build": {
@@ -313,7 +322,7 @@
     {
       "templateRef": "ubuntu-2604",
       "version": "26.04",
-      "displayName": "Ubuntu 26.04 LTS",
+      "displayName": "Ubuntu 26.04 LTS UEFI",
       "aliases": [
         "ubuntu-26.04",
         "ubuntu-resolute"
@@ -334,7 +343,8 @@
         "vmid": 9009,
         "osType": "l26",
         "diskBus": "scsi0",
-        "agentEnabled": true
+        "agentEnabled": true,
+        "firmware": "ovmf"
       },
       "minimumBytes": 864411136,
       "build": {
@@ -342,6 +352,70 @@
         "templateName": "ubuntu-2604",
         "placeholderIPv4": "192.0.2.10",
         "description": "Ubuntu 26.04 LTS official cloud image"
+      }
+    },
+    {
+      "templateRef": "ubuntu-2404-legacy",
+      "version": "24.04",
+      "displayName": "Ubuntu 24.04 LTS Legacy",
+      "aliases": [],
+      "architecture": "amd64",
+      "guestType": "qemu",
+      "source": {
+        "kind": "official-cloud-image",
+        "urlKey": "ubuntu-noble-release-amd64",
+        "sha256": "d0fe84bb5f80853425fa6be28e2c106f30104c3cfe8611933f2e65c9b63f0e30",
+        "format": "qcow2",
+        "upstreamChecksum": {
+          "algorithm": "sha256",
+          "value": "d0fe84bb5f80853425fa6be28e2c106f30104c3cfe8611933f2e65c9b63f0e30"
+        }
+      },
+      "target": {
+        "vmid": 9010,
+        "osType": "l26",
+        "diskBus": "scsi0",
+        "agentEnabled": true,
+        "firmware": "seabios"
+      },
+      "minimumBytes": 624829952,
+      "build": {
+        "family": "debian",
+        "templateName": "ubuntu-2404-legacy",
+        "placeholderIPv4": "192.0.2.11",
+        "description": "Ubuntu 24.04 LTS official released cloud image; Legacy BIOS"
+      }
+    },
+    {
+      "templateRef": "debian-12-legacy",
+      "version": "12",
+      "displayName": "Debian 12 Legacy",
+      "aliases": [],
+      "architecture": "amd64",
+      "guestType": "qemu",
+      "source": {
+        "kind": "official-cloud-image",
+        "urlKey": "debian-12-generic-amd64",
+        "sha256": "5b3a3ebcf65bddee9a7eb666f47dee50745a269947929875bd72259bd27e26d8",
+        "format": "qcow2",
+        "upstreamChecksum": {
+          "algorithm": "sha512",
+          "value": "ee13344d530f70ca055d880e5c9b61e9af89874af02c5e2a5c26724461c79409e6d76db97c67ab222e71d03c3e33a738a8958fa5c497962f592258e9835cfcb0"
+        }
+      },
+      "target": {
+        "vmid": 9011,
+        "osType": "l26",
+        "diskBus": "scsi0",
+        "agentEnabled": true,
+        "firmware": "seabios"
+      },
+      "minimumBytes": 449511424,
+      "build": {
+        "family": "debian",
+        "templateName": "debian-12-legacy",
+        "placeholderIPv4": "192.0.2.12",
+        "description": "Debian 12 official GenericCloud image; Legacy BIOS"
       }
     }
   ]

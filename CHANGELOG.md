@@ -87,3 +87,9 @@
 - Add Cloud-Init SSH, QEMU Guest Agent, BBR, NTP, disk growth and console configuration.
 - Add host-side bandwidth/IOPS limits and post-build verification.
 - Add configuration example, CI, security policy and MIT license.
+
+## 3.2.0 — 2026-09-21
+
+- 9000–9009 改为 UEFI；新增 9010 Ubuntu 24.04 Legacy、9011 Debian 12 Legacy。
+- 明确目录固件类型、EFI 分区及引导检查、独立 EFI 变量盘与实际启动验证。
+- EFI 盘随所选系统盘存储，4m、Secure Boot 关闭；保留克隆依赖和旧模板保护。

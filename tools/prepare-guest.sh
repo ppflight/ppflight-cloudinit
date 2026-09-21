@@ -3,6 +3,8 @@
 set -Eeuo pipefail
 [[ -f /etc/ppflight-offline-build ]] || { echo 'Offline build marker missing' >&2; exit 1; }
 root_uuid="$(cat /etc/ppflight-offline-build)"
+firmware="$(cat /etc/ppflight-build-firmware)"
+[[ "$firmware" == ovmf || "$firmware" == seabios ]] || exit 1
 [[ "$root_uuid" =~ ^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$ ]] || { echo 'Invalid guest root UUID' >&2; exit 1; }
 install -d -m 0755 /var/lib/ppflight-template
 # shellcheck disable=SC1091
@@ -20,7 +22,14 @@ case "$ID" in
     root_device="$(blkid -U "$root_uuid")"
     disk_name="$(lsblk -n -o PKNAME "$root_device")"
     [[ "$disk_name" =~ ^[sv]d[a-z]+$ ]] || { echo 'Cannot identify guest boot disk' >&2; exit 1; }
-    grub-install --target=i386-pc "/dev/$disk_name"
+    if [[ "$firmware" == ovmf ]]; then
+      mountpoint -q /boot/efi || { echo "EFI system partition is not mounted" >&2; exit 1; }
+      apt-get "${apt_opts[@]}" -y --no-install-recommends install grub-efi-amd64-bin
+      grub-install --target=x86_64-efi --efi-directory=/boot/efi --removable --no-nvram --force
+      test -s /boot/efi/EFI/BOOT/BOOTX64.EFI
+    else
+      grub-install --target=i386-pc "/dev/$disk_name"
+    fi
     # Proxmox NoCloud v1 addresses the first NIC as eth0. Select that name at
     # boot, before Ubuntu networkd can bring up a predictable name and prevent
     # cloud-init from renaming the active device.
@@ -122,7 +131,7 @@ passwd -l root
 rm -f /root/.ssh/authorized_keys
 # Record what was actually installed, separately from the original source checksum.
 printf 'updated_at_utc=%s\nos=%s\nversion=%s\nupdates=official-repositories\nautomatic_upgrades=disabled\nautomatic_reboot=disabled\n' "$(date -u '+%FT%TZ')" "$ID" "$VERSION_ID" > /var/lib/ppflight-template/build-info
-rm -f /etc/ppflight-offline-build
+rm -f /etc/ppflight-offline-build /etc/ppflight-build-firmware
 # Debian's appliance may not ship the SELinux relabel feature. Use the guest's
 # own current policy and setfiles, and fail rather than defer to a reboot.
 if [[ "$ID" == almalinux || "$ID" == rocky || "$ID" == centos ]]; then

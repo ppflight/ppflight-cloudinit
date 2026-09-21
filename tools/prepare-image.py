@@ -38,7 +38,9 @@ def size_bytes(size):
     return int(m[1]) * 1024 ** ('KMGT'.index(m[2]) + 1)
 
 
-def prepare(source, target, size, profile):
+def prepare(source, target, size, profile, firmware="seabios"):
+    if firmware not in ("ovmf", "seabios"):
+        raise ValueError("Unsupported firmware")
     source, target, profile = Path(source), Path(target), Path(profile)
     if not source.is_file() or source.is_symlink() or not profile.is_file():
         raise ValueError('Missing or unsafe build input')
@@ -52,6 +54,9 @@ def prepare(source, target, size, profile):
         raise ValueError('DISK_SIZE must be larger than the official source disk for offline preparation')
     if shutil.disk_usage(target.parent).free < virtual_size + 2 * 1024**3:
         raise ValueError('Insufficient preparation space; free DISK_SIZE plus 2 GiB before rebuilding')
+    mounts = run(['guestfish', '--ro', '--format=qcow2', '-a', str(source), '-i', 'mountpoints'], True)
+    if firmware == "ovmf" and not any(line.endswith(": /boot/efi") for line in mounts.splitlines()):
+        raise ValueError("UEFI image requires a mounted EFI System Partition; original templates preserved")
     root = root_partition(run(['guestfish', '--ro', '--format=qcow2', '-a', str(source), '-i', 'mountpoints'], True))
     root_uuid = run(['guestfish', '--ro', '--format=qcow2', '-a', str(source), '-i', 'vfs-uuid', root], True)
     if not re.fullmatch(r'[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}', root_uuid):
@@ -61,9 +66,14 @@ def prepare(source, target, size, profile):
         run(['virt-resize', '--format', 'qcow2', '--output-format', 'qcow2', '--expand', root, str(source), str(target)])
         run(['virt-customize', '--format', 'qcow2', '-a', str(target), '--network', '--memsize', '2048', '--smp', '2',
              '--write', '/etc/ppflight-offline-build:' + root_uuid,
+             '--write', '/etc/ppflight-build-firmware:' + firmware,
              '--upload', str(profile.with_name('configure-qga.py')) + ':/var/tmp/ppflight-configure-qga.py',
              '--upload', str(profile) + ':/var/tmp/ppflight-prepare-guest.sh',
              '--run-command', 'bash /var/tmp/ppflight-prepare-guest.sh', '--delete', '/var/tmp/ppflight-prepare-guest.sh', '--delete', '/var/tmp/ppflight-configure-qga.py', '--no-selinux-relabel', '--no-logfile'])
+        if firmware == 'ovmf':
+            efi = run(['guestfish', '--ro', '--format=qcow2', '-a', str(target), '-i', 'is-file', '/boot/efi/EFI/BOOT/BOOTX64.EFI'], True)
+            if efi != 'true':
+                raise ValueError('UEFI fallback loader missing; original templates preserved')
         report = run(['guestfish', '--ro', '--format=qcow2', '-a', str(target), '-i', 'cat', '/var/lib/ppflight-template/build-info'], True)
         if 'automatic_upgrades=disabled' not in report or 'updated_at_utc=' not in report:
             raise ValueError('Guest preparation did not produce a complete report')
@@ -72,7 +82,7 @@ def prepare(source, target, size, profile):
             raise ValueError('Package inventory is incomplete')
         run(['qemu-img', 'check', '-f', 'qcow2', str(target)], timeout=300)
         digest = file_hash(target)
-        target.with_suffix('.json').write_text(json.dumps({'preparedSha256': digest, 'guestReport': report, 'packages': packages.splitlines()}, indent=2) + '\n')
+        target.with_suffix('.json').write_text(json.dumps({'firmware': firmware, 'preparedSha256': digest, 'guestReport': report, 'packages': packages.splitlines()}, indent=2) + '\n')
         print(digest)
     except BaseException:
         target.unlink(missing_ok=True)
@@ -93,8 +103,9 @@ def main():
     p.add_argument('--source', required=True)
     p.add_argument('--target', required=True)
     p.add_argument('--size', required=True)
+    p.add_argument('--firmware', choices=['ovmf', 'seabios'], default='seabios')
     args = p.parse_args()
-    prepare(args.source, args.target, args.size, Path(__file__).with_name('prepare-guest.sh'))
+    prepare(args.source, args.target, args.size, Path(__file__).with_name('prepare-guest.sh'), args.firmware)
 
 
 if __name__ == '__main__':

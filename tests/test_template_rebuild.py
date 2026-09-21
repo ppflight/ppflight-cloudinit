@@ -151,5 +151,45 @@ class PreparationTests(unittest.TestCase):
                 prepare.prepare(path,path,'16G',path)
             self.assertEqual(b'keep',path.read_bytes())
 
+
+class FirmwareTests(unittest.TestCase):
+    def test_uefi_requires_an_esp_before_creating_any_image(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory); source=root/'source'; target=root/'target'; profile=root/'profile'
+            source.write_bytes(b'original'); profile.write_text('')
+            def run(args, capture=False, timeout=7200):
+                if args[:2] == ['qemu-img', 'info']:
+                    return '{"format":"qcow2","virtual-size":1024}'
+                if args[-1] == 'mountpoints': return '/dev/sda1: /'
+                raise AssertionError('No write is permitted without an ESP')
+            with patch.object(prepare, 'run', side_effect=run), patch.object(prepare.shutil,'disk_usage') as usage:
+                usage.return_value.free=30*1024**3
+                with self.assertRaisesRegex(ValueError, 'EFI System Partition'):
+                    prepare.prepare(source,target,'16G',profile,'ovmf')
+            self.assertFalse(target.exists())
+            self.assertEqual(b'original',source.read_bytes())
+
+    def test_validation_uses_fresh_unsigned_efi_variables_and_leaves_vendor_firmware_unchanged(self):
+        boot=load('verify-guest-boot')
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory); vendor=root/'vendor'; vendor.mkdir(); work=root/'work'; work.mkdir()
+            (vendor/'OVMF_CODE_4M.fd').write_bytes(b'code')
+            (vendor/'OVMF_VARS_4M.fd').write_bytes(b'unsigned-vars')
+            args=boot.firmware_arguments('ovmf',work,vendor)
+            self.assertIn('readonly=on',args[1])
+            self.assertIn(str(work/'efi-vars.fd'),args[3])
+            (work/'efi-vars.fd').write_bytes(b'changed-by-guest')
+            self.assertEqual(b'unsigned-vars',(vendor/'OVMF_VARS_4M.fd').read_bytes())
+            self.assertEqual([],boot.firmware_arguments('seabios',work,vendor))
+            with self.assertRaises(ValueError): boot.firmware_arguments('unknown',work,vendor)
+            (vendor/'OVMF_CODE_4M.fd').unlink()
+            with self.assertRaises(ValueError): boot.firmware_arguments('ovmf',work,vendor)
+
+    def test_catalog_has_ten_uefi_and_two_distinct_legacy_templates(self):
+        d=json.loads((ROOT/'catalog/template-catalog.v1.json').read_text())
+        actual={i['target']['vmid']:i['target']['firmware'] for i in d['items']}
+        self.assertEqual({**dict.fromkeys(range(9000,9010),'ovmf'),9010:'seabios',9011:'seabios'},actual)
+        self.assertEqual(['ubuntu-2404-legacy','debian-12-legacy'],[i['templateRef'] for i in d['items'][-2:]])
+
 if __name__ == '__main__':
     unittest.main()

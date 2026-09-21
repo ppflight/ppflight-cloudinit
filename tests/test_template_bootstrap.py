@@ -120,7 +120,7 @@ class CatalogTests(unittest.TestCase):
         catalog = bootstrap.load_catalog()
         self.assertEqual(catalog["schemaVersion"], bootstrap.CATALOG_SCHEMA)
         self.assertEqual(catalog["websitePath"], "/vps/proxmox-templates")
-        self.assertEqual(len(catalog["items"]), 10)
+        self.assertEqual(len(catalog["items"]), 12)
         self.assertEqual(len(catalog["_catalogSha256"]), 64)
         for item in catalog["items"]:
             self.assertEqual(item["architecture"], "amd64")
@@ -167,10 +167,10 @@ class CatalogTests(unittest.TestCase):
 
     def test_catalog_rows_resolve_only_builtin_https_sources(self):
         rows = bootstrap.catalog_rows(bootstrap.load_catalog())
-        self.assertEqual(len(rows), 10)
+        self.assertEqual(len(rows), 12)
         for row in rows:
             fields = row.split("|")
-            self.assertEqual(len(fields), 14)
+            self.assertEqual(len(fields), 15)
             self.assertTrue(fields[3].startswith("https://"))
             self.assertTrue(fields[4].startswith("https://"))
 
@@ -317,7 +317,7 @@ class DiscoveryAndPlanTests(unittest.TestCase):
         self.assertIsInstance(plan["requiredBytes"], str)
         self.assertEqual(plan["request"]["backupPolicy"], "required")
         self.assertEqual(plan["request"]["backupStorage"], "pbs-backup")
-        self.assertEqual(len(plan["items"]), 10)
+        self.assertEqual(len(plan["items"]), 12)
         required_item_fields = {
             "phase",
             "state",
@@ -471,7 +471,7 @@ class CLITests(unittest.TestCase):
         )
         value = json.loads(result.stdout)
         self.assertEqual(value["state"], "succeeded")
-        self.assertEqual(value["catalog"]["catalogRevision"], "2026-09-21.1")
+        self.assertEqual(value["catalog"]["catalogRevision"], "2026-09-21.2")
 
 
 if __name__ == "__main__":

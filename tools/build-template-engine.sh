@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-readonly SCRIPT_VERSION="3.1.2"
+readonly SCRIPT_VERSION="3.2.0"
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)" || exit 1
 readonly SCRIPT_DIR
 CATALOG_HELPER="$SCRIPT_DIR/tools/ppflight-template-bootstrap.py"
@@ -67,7 +67,7 @@ die() {
 
 usage() {
   cat <<'EOF'
-Build ten Proxmox Cloud-Init templates from official cloud images.
+Build twelve Proxmox Cloud-Init templates from official cloud images.
 
 Usage:
   sudo bash build-cloud-templates.sh [options]
@@ -209,7 +209,7 @@ on_exit() {
   fi
   if [[ -n "$PREPARED_DIR" && -d "$PREPARED_DIR" ]]; then
     local diagnostic
-    for diagnostic in "$PREPARED_DIR"/*.boot-error.log; do
+    for diagnostic in "$PREPARED_DIR"/*/*.boot-error.log; do
       [[ ! -f "$diagnostic" ]] || install -m 0600 "$diagnostic" "$CACHE_DIR/$(basename -- "$diagnostic")"
     done
     rm -rf -- "$PREPARED_DIR"
@@ -673,7 +673,7 @@ check_existing_vmids() {
 prepare_host_for_build() { :; }
 
 prepare_images() {
-  local row vmid name image family snippet snippet_dir
+  local row vmid name image family snippet snippet_dir firmware prepared
   for command in virt-customize virt-resize guestfish qemu-system-x86_64 genisoimage; do require_command "$command"; done
   snippet_dir="$(resolve_storage_content_dir "$FILE_STORAGE" snippets ppflight-cloudinit-probe.yaml)"
   PREPARED_DIR="$(mktemp -d "$CACHE_DIR/.prepared-XXXXXXXX")"
@@ -682,10 +682,13 @@ prepare_images() {
     IFS='|' read -r _ _ _ _ _ _ _ _ _ family _ <<< "$row"
     snippet="$DEBIAN_SNIPPET"
     [[ "$family" != rhel ]] || snippet="$RHEL_SNIPPET"
-    log "Preparing $name: official package updates, baseline software, automatic updates disabled"
-    PREPARED_HASHES[$image]="$(python3 "$SCRIPT_DIR/tools/prepare-image.py" --source "$CACHE_DIR/$image" --target "$PREPARED_DIR/$image" --size "$DISK_SIZE")" || die "Offline preparation failed for $name; no template VMID was changed"
-    [[ "${PREPARED_HASHES[$image]}" =~ ^[0-9a-f]{64}$ ]] || die 'Invalid prepared image digest'
-    python3 "$SCRIPT_DIR/tools/verify-guest-boot.py" --image "$PREPARED_DIR/$image" --vendor "$snippet_dir/$snippet" || die "Isolated boot verification failed for $name; old templates preserved"
+    firmware="${row##*|}"
+    install -d -m 0700 "$PREPARED_DIR/$vmid"
+    prepared="$PREPARED_DIR/$vmid/$image"
+    log "Preparing $name ($firmware): official package updates, baseline software, automatic updates disabled"
+    PREPARED_HASHES[$vmid]="$(python3 "$SCRIPT_DIR/tools/prepare-image.py" --source "$CACHE_DIR/$image" --target "$prepared" --size "$DISK_SIZE" --firmware "$firmware")" || die "Offline preparation failed for $name; no template VMID was changed"
+    [[ "${PREPARED_HASHES[$vmid]}" =~ ^[0-9a-f]{64}$ ]] || die 'Invalid prepared image digest'
+    python3 "$SCRIPT_DIR/tools/verify-guest-boot.py" --image "$prepared" --vendor "$snippet_dir/$snippet" --firmware "$firmware" || die "Isolated boot verification failed for $name; old templates preserved"
   done
 }
 
@@ -720,7 +723,9 @@ template_net0() {
 
 create_template() {
   local row="$1" vmid name image _url _checksum_url _algorithm _upstream_expected _source_sha256 _minimum_bytes family placeholder_ip description _version _aliases
-  local imported_volume snippet qos description_full
+  local imported_volume snippet qos description_full firmware
+  firmware="${row##*|}"
+  [[ "$firmware" == ovmf || "$firmware" == seabios ]] || die "Invalid template firmware"
   IFS='|' read -r vmid name image _url _checksum_url _algorithm _upstream_expected _source_sha256 _minimum_bytes family placeholder_ip description _version _aliases <<< "$row"
   snippet="$DEBIAN_SNIPPET"
   [[ "$family" == "rhel" ]] && snippet="$RHEL_SNIPPET"
@@ -734,6 +739,7 @@ create_template() {
     --name "$name" \
     --description "$description_full" \
     --ostype l26 \
+    --bios "$firmware" \
     --memory "$MEMORY_MB" \
     --balloon "$BALLOON" \
     --cores "$CORES" \
@@ -748,11 +754,14 @@ create_template() {
   CURRENT_VMID="$vmid"
   CURRENT_NAME="$name"
 
-  qm disk import "$vmid" "$PREPARED_DIR/$image" "$IMAGE_STORAGE"
+  qm disk import "$vmid" "$PREPARED_DIR/$vmid/$image" "$IMAGE_STORAGE"
   imported_volume="$(qm config "$vmid" | awk -F': ' '/^unused[0-9]+:/ {print $2; exit}')"
   [[ -n "$imported_volume" ]] || die "imported disk not found for VMID $vmid"
 
   qm set "$vmid" --scsi0 "$imported_volume,discard=on,ssd=$DISK_SSD,iothread=1$qos"
+  if [[ "$firmware" == ovmf ]]; then
+    qm set "$vmid" --efidisk0 "$IMAGE_STORAGE:0,efitype=4m,pre-enrolled-keys=0"
+  fi
   qm set "$vmid" --ide2 "$IMAGE_STORAGE:cloudinit"
   qm set "$vmid" --boot order=scsi0
   qm set "$vmid" --citype nocloud
@@ -793,6 +802,14 @@ verify_template() {
   [[ "$family" == "rhel" ]] && expected_snippet="$RHEL_SNIPPET"
   config="$(qm config "$vmid")"
   verify_template_network "$config"
+  local firmware="${row##*|}" efi
+  grep -qx "bios: $firmware" <<< "$config" || die "$vmid firmware mismatch"
+  efi="$(sed -n 's/^efidisk0: //p' <<< "$config")"
+  if [[ "$firmware" == ovmf ]]; then
+    [[ "$efi" == "$IMAGE_STORAGE:"* && ",$efi," == *",efitype=4m,"* && ",$efi," == *",pre-enrolled-keys=0,"* ]] || die "$vmid EFI disk mismatch"
+  else
+    [[ -z "$efi" ]] || die "$vmid Legacy template has an unexpected EFI disk"
+  fi
   grep -qx 'template: 1' <<< "$config" || die "$vmid is not a template"
   grep -qx 'ciupgrade: 0' <<< "$config" || die "$vmid has Cloud-Init automatic upgrades enabled"
   grep -qx "name: $name" <<< "$config" || die "$vmid has unexpected name"
@@ -844,9 +861,10 @@ write_manifest() {
     for row in "${SELECTED_ROWS[@]}"; do
       IFS='|' read -r vmid name image _ <<< "$row"
       printf 'template=%s|%s|%s|%s\n' "$vmid" "$name" "$image" "${IMAGE_HASHES[$image]}"
-      printf 'prepared_sha256=%s|%s\n' "$vmid" "${PREPARED_HASHES[$image]}"
-      install -m 0644 "$PREPARED_DIR/${image%.*}.json" "$CACHE_DIR/ppflight-template-$vmid-build.json"
-      install -m 0644 "$PREPARED_DIR/${image%.*}.boot.json" "$CACHE_DIR/ppflight-template-$vmid-boot.json"
+      printf 'firmware=%s|%s\n' "$vmid" "${row##*|}"
+      printf 'prepared_sha256=%s|%s\n' "$vmid" "${PREPARED_HASHES[$vmid]}"
+      install -m 0644 "$PREPARED_DIR/$vmid/${image%.*}.json" "$CACHE_DIR/ppflight-template-$vmid-build.json"
+      install -m 0644 "$PREPARED_DIR/$vmid/${image%.*}.boot.json" "$CACHE_DIR/ppflight-template-$vmid-boot.json"
     done
   } > "$manifest"
   chmod 0644 "$manifest"
