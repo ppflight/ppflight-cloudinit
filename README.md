@@ -31,6 +31,8 @@ curl -fsSL https://raw.githubusercontent.com/ppflight/ppflight-cloudinit/main/in
 | 9007 | AlmaLinux 9 |
 | 9008 | Rocky Linux 9 |
 | 9009 | Ubuntu 26.04 LTS |
+| 9010 | Ubuntu 24.04 LTS Legacy |
+| 9011 | Debian 12 Legacy |
 
 菜单显示已启用、在线且支持对应用途的 PVE 存储及剩余空间。镜像位置须支持 `iso,snippets`，安装目标须支持 `images`。没有合格存储时停止，请先在 PVE 配置相应内容类型。网桥不再固定选择 `vmbr0`：带宿主地址或默认路由的网桥会提示管理网络风险，选用时需输入 `USE` 确认；离线网桥不能选。VLAN-aware 网桥支持选择允许范围内的 VLAN，输入 `0` 使用无标签网络。
 
@@ -46,7 +48,7 @@ curl -fsSL https://raw.githubusercontent.com/ppflight/ppflight-cloudinit/main/in
 
 ## 重新制作与更新策略
 
-再次运行同一命令并选择 `ALL`，会重新制作原有七个模板，并补上 9007–9009。选定旧模板必须名称和 `ppflight-cloudinit` 标签均匹配、处于停止状态、无锁、没有关联克隆或其他 VM 磁盘引用。目前自动替换仅支持**本地 ZFS 模板存储**（如 PPFlight 的 `vpspool`）；其他存储上的旧模板会停止并保留，不猜测依赖关系。新模板仍支持符合原条件的存储。
+再次运行同一命令并选择 `ALL`，会重新制作所选模板：9000–9009 为 UEFI，9010–9011 为 Legacy。选定旧模板必须名称和 `ppflight-cloudinit` 标签均匹配、处于停止状态、无锁、没有关联克隆或其他 VM 磁盘引用。目前自动替换仅支持**本地 ZFS 模板存储**（如 PPFlight 的 `vpspool`）；其他存储上的旧模板会停止并保留，不猜测依赖关系。新模板仍支持符合原条件的存储。
 
 构建流程为：检查所有 VMID 和克隆依赖 → 下载并验证官方镜像 → 在独立 qcow2 中扩容、安装发行版当前更新及基础软件 → 清理机器身份和 SSH 主机密钥 → 用临时 overlay 隔离启动，确认 QGA 和 Cloud-init 完成 → 再次检查旧模板 → 替换并回读验证。所有选定镜像都准备成功后才开始替换；下载、更新或依赖检查失败时，旧模板尚未被删除。开始替换后若 PVE 导入失败，会报告失败，不声称批次原子回滚；修复后可重新运行。
 
