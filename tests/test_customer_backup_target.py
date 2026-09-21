@@ -45,8 +45,37 @@ class CustomerBackupTargetTest(unittest.TestCase):
             run.assert_called_once()
 
     def test_missing_digest_or_failed_readback(self):
-        with patch.object(m,'read',return_value={}), patch.object(m.subprocess,'run') as run:
+        with patch.object(m,'read',return_value={'description':'existing notes'}), patch.object(m.subprocess,'run') as run:
             with self.assertRaises(ValueError): m.save('pve01','-')
             run.assert_not_called()
         with patch.object(m,'read',side_effect=[{'digest':'a'*40}, {'description':''}]), patch.object(m.subprocess,'run'):
             with self.assertRaises(ValueError): m.save('pve01','-')
+
+    def test_empty_node_initialization_still_requires_matching_readback(self):
+        with patch.object(m,'read',side_effect=[{}, {'description':m.MARKER+'-'}]), patch.object(m.subprocess,'run') as run:
+            self.assertEqual('unset', m.save('pve01','-')['state'])
+            self.assertEqual(['perl','-e',m.INITIALIZE_EMPTY_CONFIG,'pve01',m.MARKER+'-\n'],run.call_args.args[0])
+
+    def test_native_initialization_lock_rechecks_before_write(self):
+        import tempfile, os, json
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root/'PVE').mkdir()
+            (root/'PVE/NodeConfig.pm').write_text(r'''
+package PVE::NodeConfig;
+use JSON::PP;
+our $locked = 0;
+sub lock_config { my ($node,$code)=@_; local $locked=1; $code->(); }
+sub load_config { die 'unlocked read' unless $locked; return decode_json($ENV{TEST_CONFIG}); }
+sub verify_conf { die 'invalid' unless $_[0]->{description} eq "PPFLIGHT_CUSTOMER_BACKUP_V1=-\n"; }
+sub write_config { die 'unlocked write' unless $locked; open my $f, '>', $ENV{TEST_OUTPUT} or die; print $f encode_json($_[1]); close $f; }
+1;
+''')
+            for config in [{}, {'description':'Someone edited this concurrently'}]:
+                output=root/'written.json'
+                output.unlink(missing_ok=True)
+                env=dict(os.environ, PERL5LIB=tmp, TEST_CONFIG=json.dumps(config), TEST_OUTPUT=str(output))
+                result=subprocess.run(['perl','-e',m.INITIALIZE_EMPTY_CONFIG,'pve01',m.MARKER+'-\n'],env=env,capture_output=True)
+                self.assertEqual(config == {}, result.returncode == 0)
+                self.assertEqual(config == {}, output.exists())
+                if not config: self.assertEqual({'description':m.MARKER+'-\n'}, json.loads(output.read_text()))

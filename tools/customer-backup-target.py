@@ -10,6 +10,24 @@ import sys
 MARKER = 'PPFLIGHT_CUSTOMER_BACKUP_V1='
 ID = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]{0,63}')
 
+# A new node returns {} and has no digest. Use the same native lock as its API,
+# recheck emptiness inside it, and refuse a concurrent initialization.
+INITIALIZE_EMPTY_CONFIG = r'''
+use strict;
+use warnings;
+use PVE::NodeConfig;
+my ($node, $description) = @ARGV;
+PVE::NodeConfig::lock_config($node, sub {
+    my $conf = PVE::NodeConfig::load_config($node);
+    die "Node configuration changed; retry\n" if keys %$conf;
+    $conf->{description} = $description;
+    PVE::NodeConfig::verify_conf($conf);
+    PVE::NodeConfig::write_config($node, $conf);
+});
+die $@ if $@;
+'''
+
+
 
 def parse(notes):
     if not isinstance(notes, str):
@@ -55,12 +73,17 @@ def save(node, storage):
             raise ValueError('Customer backup storage must be active, enabled and support backup on this node')
     path = f'/nodes/{node}/config'
     config = read([path])
-    digest = config.get('digest', '')
-    if not re.fullmatch(r'[0-9a-f]{40,64}', digest):
-        raise ValueError('PVE configuration digest missing; no settings changed')
+    if not isinstance(config, dict):
+        raise ValueError('Invalid PVE node configuration response')
     description = merge(config.get('description', ''), storage)
-    subprocess.run(['pvesh', 'set', path, '--description', description, '--digest', digest],
-                   check=True, capture_output=True, text=True, timeout=30)
+    if config == {}:
+        argv = ['perl', '-e', INITIALIZE_EMPTY_CONFIG, node, description]
+    else:
+        digest = config.get('digest', '')
+        if not isinstance(digest, str) or not re.fullmatch(r'[0-9a-f]{40}', digest):
+            raise ValueError('Non-empty PVE configuration digest missing; no settings changed')
+        argv = ['pvesh', 'set', path, '--description', description, '--digest', digest]
+    subprocess.run(argv, check=True, capture_output=True, text=True, timeout=30)
     result = parse(read([path]).get('description', ''))
     expected = {'state': 'unset', 'storage_id': None} if storage == '-' else {'state': 'configured', 'storage_id': storage}
     if result != expected:

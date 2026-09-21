@@ -86,6 +86,7 @@ for s in json.load(sys.stdin)["storages"]:
  if s["enabled"] and s["active"] and s["roleEligibility"]["backup"]["allowed"]:
   print(s["storageId"])
 ' <<< "$STORAGE_DISCOVERY")" || die '读取备份存储列表失败'
+  printf '整机备份只列出支持 backup 的存储；zfspool 不能直接保存备份文件，需另建 Directory 或接入 PBS/NFS。\n'
   printf '\n选择客户 VPS 整机备份位置（官网决定是否允许备份）\n  0) 暂不指定，稍后在官网配置\n'
   if [[ -n "$rows" ]]; then
     while IFS= read -r storage; do ids+=("$storage"); printf '  %s) %s\n' "${#ids[@]}" "$storage"; done <<< "$rows"

@@ -1,13 +1,13 @@
 {
   "schemaVersion": "ppflight.agent-vendor-manifest/v1",
-  "bundleVersion": "3.1.1",
+  "bundleVersion": "3.1.2",
   "catalogRevision": "2026-09-21.1",
   "catalogSha256": "e2391d87fd912867c7e79bd5e4b50a4e4783d04249940df6c9e8af886ddc27d5",
   "entrypoint": "tools/ppflight-template-bootstrap.py",
   "files": [
     {
       "path": "build-cloud-templates.sh",
-      "sha256": "3eb6e209d7509f384d2942949b362ed2b62eb597165574fd3929f02994d588ec",
+      "sha256": "6c9cb1d6fe7e3492414ccf7db681dbe6373871d388c602f83747a20f0d4290f7",
       "requiredAtRuntime": true
     },
     {
@@ -47,7 +47,7 @@
     },
     {
       "path": "tools/build-template-engine.sh",
-      "sha256": "3f5bf7dca45b42f640d1dfa197c4109d2bbfa1793a7b664ee54a4d207ae01e21",
+      "sha256": "49766c5cca21e74130f4e49f438fbf0601e4bea8caa45b776ee33058e1d512d7",
       "requiredAtRuntime": true
     },
     {
@@ -83,7 +83,7 @@
     {
       "path": "tools/customer-backup-target.py",
       "requiredAtRuntime": true,
-      "sha256": "49cbfaa0ee0fce41a89e2662ae43b88d79b6a5c9afc4183f76113a0606f964f7"
+      "sha256": "4a2ca4166e282f5d232389a8f9531ef19656d3aa8d2c013c2c334576de57a95f"
     }
   ],
   "dependencies": {
