@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-readonly SCRIPT_VERSION="3.2.0"
+readonly SCRIPT_VERSION="3.2.1"
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)" || exit 1
 readonly SCRIPT_DIR
 CATALOG_HELPER="$SCRIPT_DIR/tools/ppflight-template-bootstrap.py"
@@ -763,7 +763,12 @@ create_template() {
     qm set "$vmid" --efidisk0 "$IMAGE_STORAGE:0,efitype=4m,pre-enrolled-keys=0"
   fi
   qm set "$vmid" --ide2 "$IMAGE_STORAGE:cloudinit"
-  qm set "$vmid" --boot order=scsi0
+  # OVMF must initialize the IDE Cloud-Init controller on its first boot.
+  if [[ "$firmware" == ovmf ]]; then
+    qm set "$vmid" --boot 'order=scsi0;ide2'
+  else
+    qm set "$vmid" --boot order=scsi0
+  fi
   qm set "$vmid" --citype nocloud
   qm set "$vmid" --ciuser root
   qm set "$vmid" --ciupgrade 0
@@ -806,6 +811,7 @@ verify_template() {
   grep -qx "bios: $firmware" <<< "$config" || die "$vmid firmware mismatch"
   efi="$(sed -n 's/^efidisk0: //p' <<< "$config")"
   if [[ "$firmware" == ovmf ]]; then
+    grep -Fqx 'boot: order=scsi0;ide2' <<< "$config" || die "$vmid UEFI Cloud-Init boot order mismatch"
     [[ "$efi" == "$IMAGE_STORAGE:"* && ",$efi," == *",efitype=4m,"* && ",$efi," == *",pre-enrolled-keys=0,"* ]] || die "$vmid EFI disk mismatch"
   else
     [[ -z "$efi" ]] || die "$vmid Legacy template has an unexpected EFI disk"

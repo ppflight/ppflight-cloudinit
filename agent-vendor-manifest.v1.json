@@ -1,6 +1,6 @@
 {
   "schemaVersion": "ppflight.agent-vendor-manifest/v1",
-  "bundleVersion": "3.2.0",
+  "bundleVersion": "3.2.1",
   "catalogRevision": "2026-09-21.2",
   "catalogSha256": "6343b841268e2973b8a8e7ce505f788444b298afd4593eb09b78132447df99c9",
   "entrypoint": "tools/ppflight-template-bootstrap.py",
@@ -47,7 +47,7 @@
     },
     {
       "path": "tools/build-template-engine.sh",
-      "sha256": "8a988eda9494b3991140217ac9130da47c61c42ede238e30eea9bfbf1e646b09",
+      "sha256": "2ee7c49330890706cc4412c63a6aec8f404e42bd2b259f2d55f0f2abbe604086",
       "requiredAtRuntime": true
     },
     {
@@ -73,7 +73,7 @@
     {
       "path": "tools/verify-guest-boot.py",
       "requiredAtRuntime": true,
-      "sha256": "b77c51d301234edddb81a1793e2671bc0789345ddf795269f33249aa09ff5a38"
+      "sha256": "a74ab17b54f7da02dfa2eb24c4e2286315ac01e18ca79dc723d82976dafad447"
     },
     {
       "path": "tools/configure-qga.py",
@@ -84,6 +84,11 @@
       "path": "tools/customer-backup-target.py",
       "requiredAtRuntime": true,
       "sha256": "4a2ca4166e282f5d232389a8f9531ef19656d3aa8d2c013c2c334576de57a95f"
+    },
+    {
+      "path": "tools/repair-uefi-boot.py",
+      "requiredAtRuntime": false,
+      "sha256": "4fa242588d3d7aa5d13be4ff236abdce07d62e3a778d9ebace9ab2578b015a73"
     }
   ],
   "dependencies": {

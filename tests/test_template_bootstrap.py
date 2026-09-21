@@ -204,6 +204,7 @@ class CatalogTests(unittest.TestCase):
                 "tools/prepare-image.py",
                 "tools/configure-qga.py",
                 "tools/verify-guest-boot.py",
+                "tools/repair-uefi-boot.py",
                 "tools/prepare-guest.sh",
                 "catalog/template-catalog.v1.json",
                 "catalog/template-catalog.schema.json",
