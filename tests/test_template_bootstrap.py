@@ -120,7 +120,7 @@ class CatalogTests(unittest.TestCase):
         catalog = bootstrap.load_catalog()
         self.assertEqual(catalog["schemaVersion"], bootstrap.CATALOG_SCHEMA)
         self.assertEqual(catalog["websitePath"], "/vps/proxmox-templates")
-        self.assertEqual(len(catalog["items"]), 7)
+        self.assertEqual(len(catalog["items"]), 10)
         self.assertEqual(len(catalog["_catalogSha256"]), 64)
         for item in catalog["items"]:
             self.assertEqual(item["architecture"], "amd64")
@@ -167,7 +167,7 @@ class CatalogTests(unittest.TestCase):
 
     def test_catalog_rows_resolve_only_builtin_https_sources(self):
         rows = bootstrap.catalog_rows(bootstrap.load_catalog())
-        self.assertEqual(len(rows), 7)
+        self.assertEqual(len(rows), 10)
         for row in rows:
             fields = row.split("|")
             self.assertEqual(len(fields), 14)
@@ -199,6 +199,11 @@ class CatalogTests(unittest.TestCase):
                 "tools/ppflight-template-bootstrap.py",
                 "tools/build-template-engine.sh",
                 "tools/template-network.py",
+                "tools/template-existing.py",
+                "tools/prepare-image.py",
+                "tools/configure-qga.py",
+                "tools/verify-guest-boot.py",
+                "tools/prepare-guest.sh",
                 "catalog/template-catalog.v1.json",
                 "catalog/template-catalog.schema.json",
                 "contracts/template-bootstrap-request.schema.json",
@@ -311,7 +316,7 @@ class DiscoveryAndPlanTests(unittest.TestCase):
         self.assertIsInstance(plan["requiredBytes"], str)
         self.assertEqual(plan["request"]["backupPolicy"], "required")
         self.assertEqual(plan["request"]["backupStorage"], "pbs-backup")
-        self.assertEqual(len(plan["items"]), 7)
+        self.assertEqual(len(plan["items"]), 10)
         required_item_fields = {
             "phase",
             "state",
@@ -465,7 +470,7 @@ class CLITests(unittest.TestCase):
         )
         value = json.loads(result.stdout)
         self.assertEqual(value["state"], "succeeded")
-        self.assertEqual(value["catalog"]["catalogRevision"], "2026-09-08.1")
+        self.assertEqual(value["catalog"]["catalogRevision"], "2026-09-21.1")
 
 
 if __name__ == "__main__":

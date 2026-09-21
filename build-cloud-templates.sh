@@ -154,14 +154,22 @@ disable_pve_auto_updates() {
   log '已关闭 PVE 宿主机后台自动升级；保留手动更新及 PVE 证书续期'
 }
 
+prepare_host_for_build() {
+  disable_pve_auto_updates
+  if ! command -v virt-customize >/dev/null || ! command -v virt-resize >/dev/null || ! command -v guestfish >/dev/null; then
+    log '安装离线镜像制作工具（guestfs-tools / guestfish）'
+    apt-get -o Acquire::ForceIPv4=true -o Acquire::Retries=3 update --error-on=any
+    DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::ForceIPv4=true -o Acquire::Retries=3 install -y --no-remove --no-install-recommends guestfs-tools guestfish
+  fi
+}
+
 run_template_build() {
   unset CONFIG_FILE
   CACHE_DIR=''
   BACKUP_STORAGE=''
-  REPLACE_EXISTING=0
+  REPLACE_EXISTING=1
   FORCE_REPLACE_UNMANAGED=0
   python3 "$SCRIPT_DIR/tools/template-network.py" validate --bridge "$BRIDGE" --vlan "$VLAN_TAG" || die '所选网桥或 VLAN 已失效'
-  disable_pve_auto_updates
   main --no-backup
 }
 
@@ -183,7 +191,7 @@ interactive_main() {
   choose_network
   printf '\n制作配置：模板=%s，镜像=%s，安装位置=%s，网桥=%s，VLAN=%s\n' \
     "$ONLY_TEMPLATES" "$FILE_STORAGE" "$IMAGE_STORAGE" "$BRIDGE" "${VLAN_TAG:-无标签}"
-  printf '将关闭本机 PVE 的后台自动升级（手动更新仍可用）。\n'
+  printf '将重新制作所选模板并新增缺失模板；已被克隆引用或不是本项目的模板会阻止替换。\n先在独立镜像中安装官方更新和基础软件，全部成功后才替换旧模板。\nPVE 及新模板均关闭后台自动升级，保留手动更新。\n'
   confirm_install || return 0
   run_template_build
 }

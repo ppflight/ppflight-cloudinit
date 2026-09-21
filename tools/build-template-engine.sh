@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-readonly SCRIPT_VERSION="3.0.0"
+readonly SCRIPT_VERSION="3.1.0"
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)" || exit 1
 readonly SCRIPT_DIR
 CATALOG_HELPER="$SCRIPT_DIR/tools/ppflight-template-bootstrap.py"
@@ -49,6 +49,9 @@ DEBIAN_SNIPPET=""
 RHEL_SNIPPET=""
 CREATED_VMIDS=()
 SELECTED_ROWS=()
+PREPARED_DIR=""
+declare -A REPLACEMENT_DIGESTS=()
+declare -A PREPARED_HASHES=()
 TEMPLATE_ROWS=()
 CATALOG_REVISION=""
 CATALOG_SHA256=""
@@ -64,7 +67,7 @@ die() {
 
 usage() {
   cat <<'EOF'
-Build seven Proxmox Cloud-Init templates from official cloud images.
+Build ten Proxmox Cloud-Init templates from official cloud images.
 
 Usage:
   sudo bash build-cloud-templates.sh [options]
@@ -79,9 +82,6 @@ Options:
   --bridge NAME       PVE bridge used by template net0.
   --vlan-id ID        VLAN tag 1-4094; 0 means untagged.
   --replace           Replace existing project-managed templates.
-  --force-replace-unmanaged
-                      With --replace, also replace an untagged template whose
-                      VMID and name both match the selected definition.
   --only LIST         Comma-separated VMIDs or names (default: all).
   --no-qos            Do not add disk bandwidth/IOPS limits.
   --expected-catalog-revision REV
@@ -207,6 +207,13 @@ on_exit() {
       qm destroy "$CURRENT_VMID" --purge 1 --destroy-unreferenced-disks 1 || true
     fi
   fi
+  if [[ -n "$PREPARED_DIR" && -d "$PREPARED_DIR" ]]; then
+    local diagnostic
+    for diagnostic in "$PREPARED_DIR"/*.boot-error.log; do
+      [[ ! -f "$diagnostic" ]] || install -m 0600 "$diagnostic" "$CACHE_DIR/$(basename -- "$diagnostic")"
+    done
+    rm -rf -- "$PREPARED_DIR"
+  fi
   if ((rc != 0)); then
     printf 'Build failed with exit code %s.\n' "$rc" >&2
   fi
@@ -331,7 +338,7 @@ select_templates() {
       IFS='|' read -r vmid name _ <<< "$row"
       aliases="${row##*|}"
       if [[ "$token" == "$vmid" || "$token" == "$name" || ",$aliases," == *",$token,"* ]]; then
-        SELECTED_ROWS+=("$row")
+        if [[ " ${SELECTED_ROWS[*]} " != *" $row "* ]]; then SELECTED_ROWS+=("$row"); fi
         matched=1
         break
       fi
@@ -374,7 +381,7 @@ preflight() {
   [[ "$REPLACE_EXISTING" == "0" || "$REPLACE_EXISTING" == "1" ]] || die "REPLACE_EXISTING must be 0 or 1"
   [[ "$FORCE_REPLACE_UNMANAGED" == "0" || "$FORCE_REPLACE_UNMANAGED" == "1" ]] || die "FORCE_REPLACE_UNMANAGED must be 0 or 1"
   [[ "$CLEANUP_FAILED_VM" == "0" || "$CLEANUP_FAILED_VM" == "1" ]] || die "CLEANUP_FAILED_VM must be 0 or 1"
-  [[ "$FORCE_REPLACE_UNMANAGED" == "0" || "$REPLACE_EXISTING" == "1" ]] || die "--force-replace-unmanaged also requires --replace"
+  [[ "$FORCE_REPLACE_UNMANAGED" == "0" ]] || die "Unmanaged templates cannot be replaced automatically"
 
   if [[ "$ENABLE_QOS" == "1" ]]; then
     local help field
@@ -432,17 +439,14 @@ growpart:
   devices: ['/']
   ignore_growroot_disabled: false
 resize_rootfs: true
+apt:
+  preserve_sources_list: true
 package_update: false
 package_upgrade: false
 package_reboot_if_required: false
 bootcmd:
   - [systemctl, mask, apt-daily.timer, apt-daily-upgrade.timer, apt-daily.service, apt-daily-upgrade.service, unattended-upgrades.service]
   - [sh, -c, "systemctl stop apt-daily.timer apt-daily-upgrade.timer apt-daily.service apt-daily-upgrade.service unattended-upgrades.service 2>/dev/null || true"]
-packages:
-  - qemu-guest-agent
-  - vim
-  - curl
-  - net-tools
 write_files:
   - path: /etc/apt/apt.conf.d/99zz-ppflight-no-auto-upgrades
     owner: root:root
@@ -452,6 +456,7 @@ write_files:
       APT::Periodic::Update-Package-Lists "0";
       APT::Periodic::Download-Upgradeable-Packages "0";
       APT::Periodic::Unattended-Upgrade "0";
+      Unattended-Upgrade::Automatic-Reboot "false";
   - path: /etc/ssh/sshd_config.d/00-ppflight-cloud.conf
     owner: root:root
     permissions: '0644'
@@ -475,6 +480,7 @@ write_files:
 runcmd:
   - [modprobe, tcp_bbr]
   - [sysctl, --system]
+  - [systemctl, enable, --now, chrony]
   - [systemctl, enable, --now, ssh]
   - [systemctl, restart, ssh]
   - [systemctl, enable, --now, qemu-guest-agent]
@@ -510,12 +516,6 @@ package_reboot_if_required: false
 bootcmd:
   - [systemctl, mask, dnf-automatic.timer, dnf-automatic.service, dnf-automatic-download.timer, dnf-automatic-download.service, dnf-automatic-install.timer, dnf-automatic-install.service, dnf-automatic-notifyonly.timer, dnf-automatic-notifyonly.service, yum-cron.service]
   - [sh, -c, "systemctl stop dnf-automatic.timer dnf-automatic.service dnf-automatic-download.timer dnf-automatic-download.service dnf-automatic-install.timer dnf-automatic-install.service dnf-automatic-notifyonly.timer dnf-automatic-notifyonly.service yum-cron.service 2>/dev/null || true"]
-packages:
-  - qemu-guest-agent
-  - chrony
-  - vim-enhanced
-  - curl
-  - net-tools
 write_files:
   - path: /etc/dnf/automatic.conf
     owner: root:root
@@ -524,6 +524,7 @@ write_files:
       [commands]
       download_updates = no
       apply_updates = no
+      reboot = never
   - path: /etc/ssh/sshd_config.d/00-ppflight-cloud.conf
     owner: root:root
     permissions: '0644'
@@ -654,35 +655,51 @@ download_image() {
 }
 
 check_existing_vmids() {
-  local row vmid name config existing_name
+  local row vmid name inventory presence digest existing=0
+  inventory="$(pvesh get /cluster/resources --type vm --output-format json)" || die 'Cannot read cluster inventory'
   for row in "${SELECTED_ROWS[@]}"; do
     IFS='|' read -r vmid name _ <<< "$row"
-    if qm status "$vmid" >/dev/null 2>&1; then
-      config="$(qm config "$vmid")"
-      grep -qx 'template: 1' <<< "$config" || die "VMID $vmid exists and is not a template"
-      [[ "$REPLACE_EXISTING" == "1" ]] || die "template $vmid already exists; rerun with --replace"
-      if ! grep -Eq '^tags: .*ppflight-cloudinit([;,]|$)' <<< "$config"; then
-        existing_name="$(awk '$1 == "name:" {print $2; exit}' <<< "$config")"
-        [[ "$FORCE_REPLACE_UNMANAGED" == "1" && "$existing_name" == "$name" ]] ||
-          die "template $vmid is not tagged ppflight-cloudinit; refusing to replace it"
-      fi
+    presence="$(python3 "$SCRIPT_DIR/tools/template-existing.py" locate --vmid "$vmid" <<< "$inventory")" || die "VMID $vmid conflict"
+    if [[ "$presence" == present ]]; then
+      [[ "$REPLACE_EXISTING" == 1 ]] || die "Template $vmid exists; use --replace to rebuild it"
+      digest="$(python3 "$SCRIPT_DIR/tools/template-existing.py" replace-check --vmid "$vmid" --name "$name")" || die "Template $vmid cannot be safely replaced"
+      REPLACEMENT_DIGESTS[$vmid]="$digest"
+      existing=$((existing + 1))
     fi
+  done
+  log "Preflight: rebuild $existing existing templates; create $((${#SELECTED_ROWS[@]} - existing)) new templates"
+}
+
+prepare_host_for_build() { :; }
+
+prepare_images() {
+  local row vmid name image family snippet snippet_dir
+  for command in virt-customize virt-resize guestfish qemu-system-x86_64 genisoimage; do require_command "$command"; done
+  snippet_dir="$(resolve_storage_content_dir "$FILE_STORAGE" snippets ppflight-cloudinit-probe.yaml)"
+  PREPARED_DIR="$(mktemp -d "$CACHE_DIR/.prepared-XXXXXXXX")"
+  for row in "${SELECTED_ROWS[@]}"; do
+    IFS='|' read -r vmid name image _ <<< "$row"
+    IFS='|' read -r _ _ _ _ _ _ _ _ _ family _ <<< "$row"
+    snippet="$DEBIAN_SNIPPET"
+    [[ "$family" != rhel ]] || snippet="$RHEL_SNIPPET"
+    log "Preparing $name: official package updates, baseline software, automatic updates disabled"
+    PREPARED_HASHES[$image]="$(python3 "$SCRIPT_DIR/tools/prepare-image.py" --source "$CACHE_DIR/$image" --target "$PREPARED_DIR/$image" --size "$DISK_SIZE")" || die "Offline preparation failed for $name; no template VMID was changed"
+    [[ "${PREPARED_HASHES[$image]}" =~ ^[0-9a-f]{64}$ ]] || die 'Invalid prepared image digest'
+    python3 "$SCRIPT_DIR/tools/verify-guest-boot.py" --image "$PREPARED_DIR/$image" --vendor "$snippet_dir/$snippet" || die "Isolated boot verification failed for $name; old templates preserved"
   done
 }
 
 destroy_existing_template() {
-  local vmid="$1" expected_name="$2" config existing_name
-  if qm status "$vmid" >/dev/null 2>&1; then
-    [[ "$REPLACE_EXISTING" == "1" ]] || die "template $vmid appeared during the build; refusing to replace it without --replace"
-    config="$(qm config "$vmid")"
-    grep -qx 'template: 1' <<< "$config" || die "VMID $vmid changed and is no longer a template"
-    existing_name="$(awk '$1 == "name:" {print $2; exit}' <<< "$config")"
-    if ! grep -Eq '^tags: .*ppflight-cloudinit([;,]|$)' <<< "$config"; then
-      [[ "$FORCE_REPLACE_UNMANAGED" == "1" && "$existing_name" == "$expected_name" ]] ||
-        die "template $vmid is unmanaged or changed; refusing to destroy it"
-    fi
-    log "Replacing existing template $vmid"
-    qm destroy "$vmid" --purge 1 --destroy-unreferenced-disks 1
+  local vmid="$1" expected_name="$2" inventory presence
+  inventory="$(pvesh get /cluster/resources --type vm --output-format json)" || die 'Cannot recheck cluster inventory'
+  presence="$(python3 "$SCRIPT_DIR/tools/template-existing.py" locate --vmid "$vmid" <<< "$inventory")" || die "VMID $vmid changed during build"
+  if [[ -n "${REPLACEMENT_DIGESTS[$vmid]:-}" ]]; then
+    [[ "$presence" == present && "$REPLACE_EXISTING" == 1 ]] || die "Template $vmid disappeared during build"
+    python3 "$SCRIPT_DIR/tools/template-existing.py" replace-check --vmid "$vmid" --name "$expected_name" --expected-digest "${REPLACEMENT_DIGESTS[$vmid]}" >/dev/null || die "Template $vmid is no longer safe to replace"
+    log "Replacing checked, unreferenced project template $vmid"
+    qm destroy "$vmid" --purge 1
+  else
+    [[ "$presence" == missing ]] || die "VMID $vmid appeared during build; preserving it"
   fi
 }
 
@@ -731,7 +748,7 @@ create_template() {
   CURRENT_VMID="$vmid"
   CURRENT_NAME="$name"
 
-  qm disk import "$vmid" "$CACHE_DIR/$image" "$IMAGE_STORAGE"
+  qm disk import "$vmid" "$PREPARED_DIR/$image" "$IMAGE_STORAGE"
   imported_volume="$(qm config "$vmid" | awk -F': ' '/^unused[0-9]+:/ {print $2; exit}')"
   [[ -n "$imported_volume" ]] || die "imported disk not found for VMID $vmid"
 
@@ -827,6 +844,9 @@ write_manifest() {
     for row in "${SELECTED_ROWS[@]}"; do
       IFS='|' read -r vmid name image _ <<< "$row"
       printf 'template=%s|%s|%s|%s\n' "$vmid" "$name" "$image" "${IMAGE_HASHES[$image]}"
+      printf 'prepared_sha256=%s|%s\n' "$vmid" "${PREPARED_HASHES[$image]}"
+      install -m 0644 "$PREPARED_DIR/${image%.*}.json" "$CACHE_DIR/ppflight-template-$vmid-build.json"
+      install -m 0644 "$PREPARED_DIR/${image%.*}.boot.json" "$CACHE_DIR/ppflight-template-$vmid-boot.json"
     done
   } > "$manifest"
   chmod 0644 "$manifest"
@@ -853,6 +873,7 @@ main() {
   show_storage_layout "$snippet_dir"
 
   check_existing_vmids
+  prepare_host_for_build
 
   declare -gA IMAGE_HASHES=()
   log "Downloading and verifying all selected images before changing VMIDs"
@@ -862,6 +883,7 @@ main() {
   done
 
   write_snippets
+  prepare_images
 
   for row in "${SELECTED_ROWS[@]}"; do
     create_template "$row"

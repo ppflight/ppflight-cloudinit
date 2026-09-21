@@ -15,7 +15,7 @@ jobs:
       - name: Install ShellCheck
         run: sudo apt-get update && sudo apt-get install -y shellcheck
       - name: Check shell scripts
-        run: shellcheck -x install.sh build-cloud-templates.sh tools/build-template-engine.sh
+        run: shellcheck -x install.sh build-cloud-templates.sh tools/build-template-engine.sh tools/prepare-guest.sh
       - name: Test template catalog and Agent contract
         run: python3 -m unittest discover -s tests -v
       - name: Test interactive menus
@@ -26,6 +26,8 @@ jobs:
         run: bash tests/test_installer.sh
       - name: Test generated guest update policy
         run: bash tests/test_cloud_profiles.sh
+      - name: Test rebuild ordering and failure preservation
+        run: bash tests/test_rebuild_order.sh
       - name: Test PVE host update policy
         run: bash tests/test_host_updates.sh
       - name: Reject committed private keys

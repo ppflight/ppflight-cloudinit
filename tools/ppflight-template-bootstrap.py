@@ -46,6 +46,7 @@ ALLOWED_SOURCE_HOSTS = {
     "repo.almalinux.org",
     "cloud.debian.org",
     "cloud.centos.org",
+    "download.rockylinux.org",
 }
 FILE_CONTENT_STORAGE_TYPES = {"btrfs", "cephfs", "cifs", "dir", "glusterfs", "nfs"}
 BUILDER_SETTING_KEYS = {
@@ -88,6 +89,24 @@ BUILDER_SETTING_KEYS = {
 # urlKey is the only bridge from the public catalog to the network.  There is
 # deliberately no CLI or environment override for any source URL.
 URL_SPECS: Mapping[str, Mapping[str, str]] = {
+    "almalinux-9-genericcloud-amd64": {
+        "filename": "AlmaLinux-9-GenericCloud-9.8-20260810.x86_64.qcow2",
+        "url": "https://repo.almalinux.org/almalinux/9/cloud/x86_64/images/AlmaLinux-9-GenericCloud-9.8-20260810.x86_64.qcow2",
+        "checksumUrl": "https://repo.almalinux.org/almalinux/9/cloud/x86_64/images/CHECKSUM",
+        "checksumAlgorithm": "sha256"
+    },
+    "rocky-9-genericcloud-amd64": {
+        "filename": "Rocky-9-GenericCloud-Base-9.8-20260525.0.x86_64.qcow2",
+        "url": "https://download.rockylinux.org/pub/rocky/9/images/x86_64/Rocky-9-GenericCloud-Base-9.8-20260525.0.x86_64.qcow2",
+        "checksumUrl": "https://download.rockylinux.org/pub/rocky/9/images/x86_64/Rocky-9-GenericCloud-Base-9.8-20260525.0.x86_64.qcow2.CHECKSUM",
+        "checksumAlgorithm": "sha256"
+    },
+    "ubuntu-resolute-release-amd64": {
+        "filename": "ubuntu-26.04-server-cloudimg-amd64.img",
+        "url": "https://cloud-images.ubuntu.com/releases/resolute/release-20260918/ubuntu-26.04-server-cloudimg-amd64.img",
+        "checksumUrl": "https://cloud-images.ubuntu.com/releases/resolute/release-20260918/SHA256SUMS",
+        "checksumAlgorithm": "sha256"
+    },
     "ubuntu-jammy-release-amd64": {
         "filename": "ubuntu-22.04-server-cloudimg-amd64.img",
         "url": "https://cloud-images.ubuntu.com/releases/jammy/release-20260826/ubuntu-22.04-server-cloudimg-amd64.img",

@@ -11,6 +11,7 @@ root = pathlib.Path(sys.argv[1])
 script = b'#!/bin/bash\necho menu\n'
 (root / 'build-cloud-templates.sh').write_bytes(script)
 (root / 'agent-vendor-manifest.v1.json').write_text(json.dumps({
+    'bundleVersion': '3.1.0', 'catalogRevision': '2026-09-21.1',
     'files': [{'path': 'build-cloud-templates.sh', 'sha256': hashlib.sha256(script).hexdigest()}]
 }))
 PY

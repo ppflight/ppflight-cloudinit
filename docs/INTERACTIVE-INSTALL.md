@@ -45,7 +45,7 @@ curl -fsSL https://raw.githubusercontent.com/ppflight/ppflight-cloudinit/main/in
 制作配置：模板=9000,9001，镜像=local，安装位置=vpspool，网桥=vmbr1，VLAN=2100
 ```
 
-脚本校验官方镜像后创建模板，再验证制作结果。此流程不备份模板、不从旧备份执行 `qmrestore`。VPS 备份目标在后续 PVE/WHMCS 备份任务中配置，不随模板克隆继承。
+脚本校验官方镜像后，在独立镜像安装当前发行版官方更新和基础软件；所有镜像准备完成后才替换/创建模板，再验证制作结果。此流程不备份模板、不从旧备份执行 `qmrestore`。VPS 备份目标在后续 PVE/WHMCS 备份任务中配置，不随模板克隆继承。
 
 启动程序从 GitHub 下载完整版本快照并核对运行文件摘要。菜单从当前终端读取输入，因此 `curl | bash` 不影响选择操作。程序退出后清理临时安装文件；镜像缓存和模板保留在所选 PVE 存储。
 
@@ -79,7 +79,7 @@ systemctl enable --now apt-daily.timer apt-daily-upgrade.timer
 curl -fsSL https://raw.githubusercontent.com/ppflight/ppflight-cloudinit/main/install.sh | bash
 ```
 
-已有 VMID 不会被覆盖，请只选择尚未制作的模板。
+选中的已有项目模板会重新制作；新 VMID 则新增模板。替换前检查名称、标签、状态、锁、ZFS 关联克隆和其他 VM 的磁盘引用；发现依赖即停止。仅自动替换本地 ZFS 上的受管模板，普通 VM／容器／其他存储上的旧模板均保留。
 
 ## 常见情况
 
@@ -88,13 +88,13 @@ curl -fsSL https://raw.githubusercontent.com/ppflight/ppflight-cloudinit/main/in
 - **发现 PVE 存储失败 / Unknown option: output-format**：旧版本误向 `pvesm` 传入 JSON 输出参数，已改为节点 `pvesh` API。重新执行在线命令获取修复版；新版也会显示具体失败原因。
 
 - **没有合格存储**：在 PVE 中检查存储是否启用、对当前节点可用，以及是否允许表格中的内容类型。镜像存储必须同时支持 `iso` 和 `snippets`。
-- **已有 VMID**：脚本停止，不覆盖已有 VM 或模板。重新运行时只选择尚未创建的 VMID。
+- **已有 VMID**：仅重做本项目、无依赖的本地 ZFS 模板；其他占用一律停止。不要删除客户克隆来绕过此检查。
 - **输入错误**：重新显示输入提示；在菜单阶段按 Ctrl+C 或结束输入可退出。
 - **提示需要交互终端**：在 PVE Shell/SSH 终端运行上面的一键命令；启动脚本会打开终端读取菜单，不要通过管道传入菜单答案。
 
 ## 自动化集成
 
-新模板默认关闭克隆系统自动升级与自动重启，并屏蔽 APT unattended-upgrades、DNF/YUM 自动更新任务；必要软件的首次安装仍保留。此设置不追溯修改已有克隆。PVE/WHMCS 后续覆盖 `ciupgrade` 或 Cloud-Init 配置时，应继续保持 `ciupgrade=0` 和 `package_upgrade=false`。
+新模板默认关闭克隆系统自动升级与自动重启，并屏蔽 APT unattended-upgrades、DNF/YUM 自动更新任务；必要软件在独立镜像制作时预装，首次启动不再下载。此设置不追溯修改已有克隆。PVE/WHMCS 后续覆盖 `ciupgrade` 或 Cloud-Init 配置时，应继续保持 `ciupgrade=0` 和 `package_upgrade=false`。
 
 面向人的入口使用上面的在线命令，不再接收旧命令参数。Agent 自动化使用 [Python helper](AGENT-BOOTSTRAP.md)，由 helper 调用内部构建引擎。镜像校验、VMID 保护和构建验证继续由公共引擎执行。
 
@@ -103,3 +103,5 @@ curl -fsSL https://raw.githubusercontent.com/ppflight/ppflight-cloudinit/main/in
 当前 PPFlight 两台 PVE 建议选择 `vmbr1`、VLAN `2100`，模板网卡为 `virtio,bridge=vmbr1,firewall=1,tag=2100`。官网正式绑定的网桥和 VLAN 应与此一致；后续开通仍以官网网络附件配置为准。`vmbr0` 留给管理访问。
 
 直接使用内部构建引擎时，可设置 `BRIDGE`、`VLAN_TAG`，或使用 `--bridge vmbr1 --vlan-id 2100`；`--vlan-id 0` 为无标签。内部引擎未指定网桥时保留历史 `vmbr0` 默认值以兼容已有调用，但也会检查网桥在线状态。Agent v1 接口不新增 VLAN 字段，并清理继承的 `VLAN_TAG` 环境变量，避免改变既有 Agent 请求含义。
+
+制作流程、预装软件、软件源、ZFS 替换边界及离线工具说明见 [README](../README.md#重新制作与更新策略)。首次制作比只导入官方云镜像更慢，因为实际安装了更新和软件；后续客户开通无需等待这些下载。

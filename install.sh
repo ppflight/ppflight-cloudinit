@@ -22,7 +22,7 @@ for entry in manifest["files"]:
         sys.exit("运行文件路径无效：" + entry["path"])
     if hashlib.sha256(path.read_bytes()).hexdigest() != entry["sha256"]:
         sys.exit("运行文件校验失败：" + entry["path"])
-print("安装文件下载及校验完成。")
+print("安装文件下载及校验完成。版本：" + manifest["bundleVersion"] + "；模板目录：" + manifest["catalogRevision"])
 PY
 }
 

@@ -1,23 +1,23 @@
 {
   "schemaVersion": "ppflight.agent-vendor-manifest/v1",
-  "bundleVersion": "3.0.0",
-  "catalogRevision": "2026-09-08.1",
-  "catalogSha256": "d9b172167f5ad9dbe648263f1c9b901b65e196e010b080133bdd43c5a7dfb50c",
+  "bundleVersion": "3.1.0",
+  "catalogRevision": "2026-09-21.1",
+  "catalogSha256": "e2391d87fd912867c7e79bd5e4b50a4e4783d04249940df6c9e8af886ddc27d5",
   "entrypoint": "tools/ppflight-template-bootstrap.py",
   "files": [
     {
       "path": "build-cloud-templates.sh",
-      "sha256": "32890702b558e60dd9e498771aef6c97a0d343cf5a081c55db4ac9f44e6908c1",
+      "sha256": "c221cc08db3f4fc10ddb2a119def939683e2a2b8cb73a0bf09e9adb633c6e3b9",
       "requiredAtRuntime": true
     },
     {
       "path": "tools/ppflight-template-bootstrap.py",
-      "sha256": "a2575980d10a8d7ad02f0b2d9e0071197350bed706818c4824f12a27675cec2e",
+      "sha256": "69b634ccc788fe07b660611b3b3d580d147abbfeac0ff855eb084988913cdb34",
       "requiredAtRuntime": true
     },
     {
       "path": "catalog/template-catalog.v1.json",
-      "sha256": "d9b172167f5ad9dbe648263f1c9b901b65e196e010b080133bdd43c5a7dfb50c",
+      "sha256": "e2391d87fd912867c7e79bd5e4b50a4e4783d04249940df6c9e8af886ddc27d5",
       "requiredAtRuntime": true
     },
     {
@@ -47,13 +47,38 @@
     },
     {
       "path": "tools/build-template-engine.sh",
-      "sha256": "f18011c893bcda6009c6a1b7f6c190a15350c4d510082d2c660632808f36d711",
+      "sha256": "25ff6590b7b3782d79b58fd83ebb50b038409bac4fcadac9bc79115c411619d7",
       "requiredAtRuntime": true
     },
     {
       "path": "tools/template-network.py",
       "sha256": "59df88021cb16294ad5eb2da76bbbc959385e2049ced9660b29cb37ca259e37d",
       "requiredAtRuntime": true
+    },
+    {
+      "path": "tools/template-existing.py",
+      "requiredAtRuntime": true,
+      "sha256": "b5193d2dee70008e148b056820d7c42473a6e72cec88627e30f3049504621383"
+    },
+    {
+      "path": "tools/prepare-image.py",
+      "requiredAtRuntime": true,
+      "sha256": "d758424911142fee0b9f1587938dc5f6a149f6556732ed0998269a5ea07d9ff4"
+    },
+    {
+      "path": "tools/prepare-guest.sh",
+      "requiredAtRuntime": true,
+      "sha256": "ecf4d4973c8cdcb53c3a8baab35035df1afcc02cd8274993e670a5589648b14f"
+    },
+    {
+      "path": "tools/verify-guest-boot.py",
+      "requiredAtRuntime": true,
+      "sha256": "27cb2654a1c292676bf894b249452402e0785ae5f90a8a7aa28ef46a4a780552"
+    },
+    {
+      "path": "tools/configure-qga.py",
+      "requiredAtRuntime": true,
+      "sha256": "48f465a94bf5c636261ed4bb959d35889c0a3aadedb9f17b3bad401e6e06420c"
     }
   ],
   "dependencies": {
@@ -70,7 +95,9 @@
       "dirname",
       "findmnt",
       "flock",
+      "genisoimage",
       "grep",
+      "guestfish",
       "id",
       "install",
       "ip",
@@ -82,12 +109,15 @@
       "pveversion",
       "python3",
       "qemu-img",
+      "qemu-system-x86_64",
       "qm",
       "rm",
       "sed",
       "sha256sum",
       "sha512sum",
       "stat",
+      "virt-customize",
+      "virt-resize",
       "vzdump"
     ],
     "perlModules": [
@@ -98,7 +128,8 @@
     "cloud-images.ubuntu.com",
     "repo.almalinux.org",
     "cloud.debian.org",
-    "cloud.centos.org"
+    "cloud.centos.org",
+    "download.rockylinux.org"
   ],
   "networkRedirectPolicy": {
     "allowed": true,

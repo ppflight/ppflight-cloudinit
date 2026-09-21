@@ -1,15 +1,18 @@
 {
   "schemaVersion": "ppflight.template-catalog/v1",
   "catalogId": "ppflight-proxmox-templates",
-  "catalogRevision": "2026-09-08.1",
-  "issuedAt": "2026-09-08T13:37:01Z",
+  "catalogRevision": "2026-09-21.1",
+  "issuedAt": "2026-09-21T02:15:00Z",
   "websitePath": "/vps/proxmox-templates",
   "items": [
     {
       "templateRef": "ubuntu-2204",
       "version": "22.04",
       "displayName": "Ubuntu 22.04 LTS",
-      "aliases": ["ubuntu-22.04", "ubuntu-jammy"],
+      "aliases": [
+        "ubuntu-22.04",
+        "ubuntu-jammy"
+      ],
       "architecture": "amd64",
       "guestType": "qemu",
       "source": {
@@ -40,7 +43,10 @@
       "templateRef": "ubuntu-2404",
       "version": "24.04",
       "displayName": "Ubuntu 24.04 LTS",
-      "aliases": ["ubuntu-24.04", "ubuntu-noble"],
+      "aliases": [
+        "ubuntu-24.04",
+        "ubuntu-noble"
+      ],
       "architecture": "amd64",
       "guestType": "qemu",
       "source": {
@@ -71,7 +77,10 @@
       "templateRef": "almalinux-8",
       "version": "8",
       "displayName": "AlmaLinux 8",
-      "aliases": ["alma-8", "alma8"],
+      "aliases": [
+        "alma-8",
+        "alma8"
+      ],
       "architecture": "amd64",
       "guestType": "qemu",
       "source": {
@@ -102,7 +111,10 @@
       "templateRef": "debian-13",
       "version": "13",
       "displayName": "Debian 13",
-      "aliases": ["debian-trixie", "trixie"],
+      "aliases": [
+        "debian-trixie",
+        "trixie"
+      ],
       "architecture": "amd64",
       "guestType": "qemu",
       "source": {
@@ -133,7 +145,10 @@
       "templateRef": "debian-12",
       "version": "12",
       "displayName": "Debian 12",
-      "aliases": ["debian-bookworm", "bookworm"],
+      "aliases": [
+        "debian-bookworm",
+        "bookworm"
+      ],
       "architecture": "amd64",
       "guestType": "qemu",
       "source": {
@@ -164,7 +179,10 @@
       "templateRef": "centos-stream-9",
       "version": "9-stream",
       "displayName": "CentOS Stream 9",
-      "aliases": ["centos-9-stream", "centos9-stream"],
+      "aliases": [
+        "centos-9-stream",
+        "centos9-stream"
+      ],
       "architecture": "amd64",
       "guestType": "qemu",
       "source": {
@@ -195,7 +213,10 @@
       "templateRef": "centos-stream-10",
       "version": "10-stream",
       "displayName": "CentOS Stream 10",
-      "aliases": ["centos-10-stream", "centos10-stream"],
+      "aliases": [
+        "centos-10-stream",
+        "centos10-stream"
+      ],
       "architecture": "amd64",
       "guestType": "qemu",
       "source": {
@@ -220,6 +241,107 @@
         "templateName": "centos-stream-10",
         "placeholderIPv4": "192.0.2.7",
         "description": "CentOS Stream 10 official GenericCloud image; requires x86-64-v3"
+      }
+    },
+    {
+      "templateRef": "almalinux-9",
+      "version": "9",
+      "displayName": "AlmaLinux 9",
+      "aliases": [
+        "alma-9",
+        "alma9"
+      ],
+      "architecture": "amd64",
+      "guestType": "qemu",
+      "source": {
+        "kind": "official-cloud-image",
+        "urlKey": "almalinux-9-genericcloud-amd64",
+        "sha256": "6bdab6376d46d42e4203ace3733efafc7c5d37c7cb443a6cc74750097002d74b",
+        "format": "qcow2",
+        "upstreamChecksum": {
+          "algorithm": "sha256",
+          "value": "6bdab6376d46d42e4203ace3733efafc7c5d37c7cb443a6cc74750097002d74b"
+        }
+      },
+      "target": {
+        "vmid": 9007,
+        "osType": "l26",
+        "diskBus": "scsi0",
+        "agentEnabled": true
+      },
+      "minimumBytes": 589299712,
+      "build": {
+        "family": "rhel",
+        "templateName": "almalinux-9",
+        "placeholderIPv4": "192.0.2.8",
+        "description": "AlmaLinux 9 official cloud image"
+      }
+    },
+    {
+      "templateRef": "rocky-9",
+      "version": "9",
+      "displayName": "Rocky Linux 9",
+      "aliases": [
+        "rockylinux-9"
+      ],
+      "architecture": "amd64",
+      "guestType": "qemu",
+      "source": {
+        "kind": "official-cloud-image",
+        "urlKey": "rocky-9-genericcloud-amd64",
+        "sha256": "92c206cc6f790c61583247eefe87890f8828420662c17cacf247cec78ab4eec8",
+        "format": "qcow2",
+        "upstreamChecksum": {
+          "algorithm": "sha256",
+          "value": "92c206cc6f790c61583247eefe87890f8828420662c17cacf247cec78ab4eec8"
+        }
+      },
+      "target": {
+        "vmid": 9008,
+        "osType": "l26",
+        "diskBus": "scsi0",
+        "agentEnabled": true
+      },
+      "minimumBytes": 645988352,
+      "build": {
+        "family": "rhel",
+        "templateName": "rocky-9",
+        "placeholderIPv4": "192.0.2.9",
+        "description": "Rocky Linux 9 official cloud image"
+      }
+    },
+    {
+      "templateRef": "ubuntu-2604",
+      "version": "26.04",
+      "displayName": "Ubuntu 26.04 LTS",
+      "aliases": [
+        "ubuntu-26.04",
+        "ubuntu-resolute"
+      ],
+      "architecture": "amd64",
+      "guestType": "qemu",
+      "source": {
+        "kind": "official-cloud-image",
+        "urlKey": "ubuntu-resolute-release-amd64",
+        "sha256": "4908fb59ccd4e87ae4e8e973b7ef56f535448eacb24a87fd787270c0048987bc",
+        "format": "qcow2",
+        "upstreamChecksum": {
+          "algorithm": "sha256",
+          "value": "4908fb59ccd4e87ae4e8e973b7ef56f535448eacb24a87fd787270c0048987bc"
+        }
+      },
+      "target": {
+        "vmid": 9009,
+        "osType": "l26",
+        "diskBus": "scsi0",
+        "agentEnabled": true
+      },
+      "minimumBytes": 864411136,
+      "build": {
+        "family": "debian",
+        "templateName": "ubuntu-2604",
+        "placeholderIPv4": "192.0.2.10",
+        "description": "Ubuntu 26.04 LTS official cloud image"
       }
     }
   ]

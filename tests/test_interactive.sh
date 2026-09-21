@@ -30,7 +30,8 @@ CONFIG_FILE=/does-not-exist
 host_policy_applied=0
 disable_pve_auto_updates() { host_policy_applied=1; }
 main() {
-  [[ "$host_policy_applied" == 1 ]]
+  prepare_host_for_build
+  [[ "$host_policy_applied" == 1 && "$REPLACE_EXISTING" == 1 ]]
   [[ "$*" == --no-backup ]]
   [[ -z "$BACKUP_STORAGE" && -z "${CONFIG_FILE:-}" ]]
   CREATED_VMIDS=(9000)
@@ -41,6 +42,8 @@ main() {
 python3() {
   [[ "$1" == "$SCRIPT_DIR/tools/template-network.py" && "$2" == validate ]]
 }
+command() { [[ "$*" == *virt-customize* || "$*" == *virt-resize* || "$*" == *guestfish* ]] && return 0; builtin command "$@"; }
 run_template_build
+unset -f command
 unset -f python3
 printf 'Template-only build test passed.\n'

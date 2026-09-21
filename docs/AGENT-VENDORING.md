@@ -35,7 +35,7 @@
 
 发布 Agent 包时应把以下值记录进自身构建 manifest，并在安装时验证文件 SHA-256：
 
-- cloudinit bundle version（当前 builder `3.0.0`）。
+- cloudinit bundle version（当前 builder `3.1.0`）。
 - catalog `catalogRevision`。
 - catalog 文件 SHA-256（helper 的 `catalogSha256`）。
 - 上述每个 runtime 文件的 SHA-256。
@@ -64,3 +64,5 @@ manifest 的 `networkHosts` 是 catalog 内置 `urlKey` 的初始 HTTPS 主机�
 ## 升级规则
 
 Agent 升级应原子替换整个 bundle，不能只更新 catalog 或单独更新 builder。已有 plan 若发现 `catalogRevision` 或 `catalogSha256` 变化，必须废弃并重新展示确认。
+
+3.1.0 构建额外需要 `guestfs-tools`、`guestfish` 提供的离线镜像工具，以及 PVE 的 `qemu-system-x86_64`、`genisoimage`。Bash 菜单按需安装 guestfs 依赖；底层/Agent 调用必须预先具备工具，缺失时停止。原始镜像 URL 清单不覆盖镜像内部的官方 APT/DNF 仓库，制作阶段还需允许它们出站取更新；不连接客户业务网桥。
