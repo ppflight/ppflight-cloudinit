@@ -75,6 +75,41 @@ for s in data["storages"]:
   done
 }
 
+choose_customer_backup() {
+  local rows current answer index storage
+  local -a ids=()
+  current="$(python3 "$SCRIPT_DIR/tools/customer-backup-target.py" show)" || die '读取客户 VPS 备份目标失败'
+  current="$(python3 -c 'import json,sys; v=json.load(sys.stdin); print(v.get("storage_id") or "-")' <<< "$current")"
+  rows="$(python3 -c '
+import json,sys
+for s in json.load(sys.stdin)["storages"]:
+ if s["enabled"] and s["active"] and s["roleEligibility"]["backup"]["allowed"]:
+  print(s["storageId"])
+' <<< "$STORAGE_DISCOVERY")" || die '读取备份存储列表失败'
+  printf '\n选择客户 VPS 整机备份位置（官网决定是否允许备份）\n  0) 暂不指定，稍后在官网配置\n'
+  if [[ -n "$rows" ]]; then
+    while IFS= read -r storage; do ids+=("$storage"); printf '  %s) %s\n' "${#ids[@]}" "$storage"; done <<< "$rows"
+  else
+    printf '  当前没有在线且支持 backup 的存储；请先在 PVE 添加备份存储。\n'
+  fi
+  local default=0
+  for index in "${!ids[@]}"; do [[ "${ids[$index]}" != "$current" ]] || default=$((index+1)); done
+  while true; do
+    read -r -p "选择序号 [$default]：" answer || die '输入已结束，配置取消'
+    answer="${answer:-$default}"
+    if [[ "$answer" == 0 ]]; then CUSTOMER_BACKUP_STORAGE='-'; return; fi
+    for index in "${!ids[@]}"; do
+      if [[ "$answer" == "$((index+1))" ]]; then CUSTOMER_BACKUP_STORAGE="${ids[$index]}"; return; fi
+    done
+    printf '无效序号，请重新选择。\n'
+  done
+}
+
+save_customer_backup() {
+  python3 "$SCRIPT_DIR/tools/customer-backup-target.py" set --storage "$CUSTOMER_BACKUP_STORAGE" || die '客户 VPS 备份位置未保存，尚未开始制作模板'
+  printf '客户 VPS 备份位置已保存：%s。请在官网同步节点资源；不会创建备份任务或开启套餐备份。\n' "$CUSTOMER_BACKUP_STORAGE"
+}
+
 choose_network() {
   local answer selected management aware allowed default_vlan confirm
   local helper="$SCRIPT_DIR/tools/template-network.py"
@@ -112,7 +147,7 @@ choose_network() {
 confirm_install() {
   local answer
   while true; do
-    read -r -p '开始安装？[Y/n]：' answer || die '输入已结束，安装取消'
+    read -r -p '确认执行？[Y/n]：' answer || die '输入已结束，安装取消'
     case "${answer,,}" in
       ''|y|yes) return 0 ;;
       n|no) printf '已取消安装。\n'; return 1 ;;
@@ -180,19 +215,34 @@ interactive_main() {
   require_command python3
   require_command pvesh
   require_command pvesm
+  local operation
+  printf '\n  1) 制作 / 重新制作模板\n  2) 仅设置客户 VPS 备份位置（不重做模板）\n'
+  while true; do
+    read -r -p '选择操作 [1]：' operation || die '输入已结束，操作取消'
+    operation="${operation:-1}"
+    [[ "$operation" != 1 && "$operation" != 2 ]] || break
+  done
   load_template_catalog
-  choose_templates
+  if [[ "$operation" == 1 ]]; then choose_templates; fi
   if ! STORAGE_DISCOVERY="$(python3 "$CATALOG_HELPER" discover)"; then
     printf '%s\n' "$STORAGE_DISCOVERY" >&2
     die '发现 PVE 存储失败（详细原因见上方）'
   fi
+  if [[ "$operation" == 2 ]]; then
+    choose_customer_backup
+    confirm_install || return 0
+    save_customer_backup
+    return
+  fi
   choose_storage image '选择镜像下载位置（iso、snippets）' FILE_STORAGE
   choose_storage template '选择模板安装位置（images）' IMAGE_STORAGE
   choose_network
+  choose_customer_backup
   printf '\n制作配置：模板=%s，镜像=%s，安装位置=%s，网桥=%s，VLAN=%s\n' \
     "$ONLY_TEMPLATES" "$FILE_STORAGE" "$IMAGE_STORAGE" "$BRIDGE" "${VLAN_TAG:-无标签}"
   printf '将重新制作所选模板并新增缺失模板；已被克隆引用或不是本项目的模板会阻止替换。\n先在独立镜像中安装官方更新和基础软件，全部成功后才替换旧模板。\nPVE 及新模板均关闭后台自动升级，保留手动更新。\n'
   confirm_install || return 0
+  save_customer_backup
   run_template_build
 }
 

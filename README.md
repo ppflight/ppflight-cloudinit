@@ -40,7 +40,7 @@ curl -fsSL https://raw.githubusercontent.com/ppflight/ppflight-cloudinit/main/in
 
 新模板的克隆系统默认关闭自动升级：PVE `ciupgrade=0`，Cloud-Init 不做全系统升级或自动重启，APT unattended-upgrades 和 DNF/YUM 自动更新任务被屏蔽。Cloud-init、QGA、SSH、CA 证书、curl、Chrony、磁盘扩容、IP/DNS/路由诊断和基本编辑工具在制作阶段提前安装；首次启动不再依赖软件源安装这些软件。手动安装和更新仍可用。此策略只作用于使用新模板和新 Cloud-Init 配置的克隆，不修改 PVE 宿主机或已有克隆。
 
-此入口只制作模板，不备份模板、不创建 VPS 备份任务，也不执行已有备份恢复。脚本不分区或格式化宿主物理盘；选择的本项目旧模板会重新制作，普通 VM、容器及其他项目模板保持保护。VPS 的备份存储需在后续 PVE/WHMCS 备份任务中指定，不会通过克隆模板自动继承。
+此入口可制作模板或单独配置客户 VPS 备份位置；不备份模板、不创建 VPS 备份任务，也不执行已有备份恢复。脚本不分区或格式化宿主物理盘；选择的本项目旧模板会重新制作，普通 VM、容器及其他项目模板保持保护。制作菜单会询问客户 VPS 备份存储，也可在首页选择 `2) 仅设置客户 VPS 备份位置`，无需重做模板。官网同步节点资源后匹配该目标；官网手动保存的目标（包括不配置）优先，是否允许备份及份数仍由官网套餐控制。配置保存在 PVE 节点备注，不通过模板克隆继承。
 
 底层构建逻辑保留官方镜像校验、Cloud-Init 配置和安装结果检查。`tools/build-template-engine.sh` 是内部构建入口，供交互菜单和 Agent 共用。Agent 集成见 [接口文档](docs/AGENT-BOOTSTRAP.md) 和 [内置清单](docs/AGENT-VENDORING.md)。
 

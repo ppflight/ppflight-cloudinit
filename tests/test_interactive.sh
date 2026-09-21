@@ -47,3 +47,26 @@ run_template_build
 unset -f command
 unset -f python3
 printf 'Template-only build test passed.\n'
+
+# Customer destination is independent from template-backup policy.
+python3() {
+  if [[ "$1" == "$SCRIPT_DIR/tools/customer-backup-target.py" ]]; then
+    [[ "$2" == show ]] || return 1
+    printf '{"state":"configured","storage_id":"pbs"}\n'
+  else
+    command python3 "$@"
+  fi
+}
+STORAGE_DISCOVERY='{"storages":[{"storageId":"offline","enabled":true,"active":false,"roleEligibility":{"backup":{"allowed":true}}},{"storageId":"pbs","enabled":true,"active":true,"roleEligibility":{"backup":{"allowed":true}}}]}'
+BACKUP_STORAGE='template-backup-must-stay-separate'
+choose_customer_backup <<< $'99\n1'
+[[ "$CUSTOMER_BACKUP_STORAGE" == pbs && "$BACKUP_STORAGE" == template-backup-must-stay-separate ]]
+choose_customer_backup <<< ''
+[[ "$CUSTOMER_BACKUP_STORAGE" == pbs ]]
+choose_customer_backup <<< 0
+[[ "$CUSTOMER_BACKUP_STORAGE" == - ]]
+STORAGE_DISCOVERY='{"storages":[]}'
+choose_customer_backup <<< ''
+[[ "$CUSTOMER_BACKUP_STORAGE" == - ]]
+unset -f python3
+printf 'Customer backup destination menus passed.\n'

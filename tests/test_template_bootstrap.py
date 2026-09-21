@@ -199,6 +199,7 @@ class CatalogTests(unittest.TestCase):
                 "tools/ppflight-template-bootstrap.py",
                 "tools/build-template-engine.sh",
                 "tools/template-network.py",
+                "tools/customer-backup-target.py",
                 "tools/template-existing.py",
                 "tools/prepare-image.py",
                 "tools/configure-qga.py",

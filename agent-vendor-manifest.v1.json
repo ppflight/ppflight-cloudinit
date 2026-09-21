@@ -1,13 +1,13 @@
 {
   "schemaVersion": "ppflight.agent-vendor-manifest/v1",
-  "bundleVersion": "3.1.0",
+  "bundleVersion": "3.1.1",
   "catalogRevision": "2026-09-21.1",
   "catalogSha256": "e2391d87fd912867c7e79bd5e4b50a4e4783d04249940df6c9e8af886ddc27d5",
   "entrypoint": "tools/ppflight-template-bootstrap.py",
   "files": [
     {
       "path": "build-cloud-templates.sh",
-      "sha256": "c221cc08db3f4fc10ddb2a119def939683e2a2b8cb73a0bf09e9adb633c6e3b9",
+      "sha256": "3eb6e209d7509f384d2942949b362ed2b62eb597165574fd3929f02994d588ec",
       "requiredAtRuntime": true
     },
     {
@@ -47,7 +47,7 @@
     },
     {
       "path": "tools/build-template-engine.sh",
-      "sha256": "25ff6590b7b3782d79b58fd83ebb50b038409bac4fcadac9bc79115c411619d7",
+      "sha256": "3f5bf7dca45b42f640d1dfa197c4109d2bbfa1793a7b664ee54a4d207ae01e21",
       "requiredAtRuntime": true
     },
     {
@@ -79,6 +79,11 @@
       "path": "tools/configure-qga.py",
       "requiredAtRuntime": true,
       "sha256": "48f465a94bf5c636261ed4bb959d35889c0a3aadedb9f17b3bad401e6e06420c"
+    },
+    {
+      "path": "tools/customer-backup-target.py",
+      "requiredAtRuntime": true,
+      "sha256": "49cbfaa0ee0fce41a89e2662ae43b88d79b6a5c9afc4183f76113a0606f964f7"
     }
   ],
   "dependencies": {

@@ -35,7 +35,7 @@
 
 发布 Agent 包时应把以下值记录进自身构建 manifest，并在安装时验证文件 SHA-256：
 
-- cloudinit bundle version（当前 builder `3.1.0`）。
+- cloudinit bundle version（当前 builder `3.1.1`）。
 - catalog `catalogRevision`。
 - catalog 文件 SHA-256（helper 的 `catalogSha256`）。
 - 上述每个 runtime 文件的 SHA-256。
