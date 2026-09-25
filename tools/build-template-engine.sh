@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-readonly SCRIPT_VERSION="3.2.1"
+readonly SCRIPT_VERSION="3.2.2"
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)" || exit 1
 readonly SCRIPT_DIR
 CATALOG_HELPER="$SCRIPT_DIR/tools/ppflight-template-bootstrap.py"
@@ -13,7 +13,7 @@ FILE_STORAGE="${FILE_STORAGE:-local}"
 BRIDGE="${BRIDGE:-vmbr0}"
 VLAN_TAG="${VLAN_TAG:-}"
 CACHE_DIR="${CACHE_DIR:-}"
-DISK_SIZE="${DISK_SIZE:-16G}"
+DISK_SIZE="${DISK_SIZE:-10G}"
 MEMORY_MB="${MEMORY_MB:-2048}"
 CORES="${CORES:-2}"
 CPU_TYPE="${CPU_TYPE:-host}"
@@ -373,7 +373,7 @@ preflight() {
   for pair in MEMORY_MB:"$MEMORY_MB" CORES:"$CORES" BALLOON:"$BALLOON" FIREWALL:"$FIREWALL" DISK_SSD:"$DISK_SSD"; do
     validate_integer "${pair%%:*}" "${pair#*:}"
   done
-  [[ "$DISK_SIZE" =~ ^[0-9]+[KMGT]$ ]] || die "DISK_SIZE must look like 16G"
+  [[ "$DISK_SIZE" =~ ^[0-9]+[KMGT]$ ]] || die "DISK_SIZE must look like 10G"
   [[ -z "$CACHE_DIR" || "$CACHE_DIR" == /* ]] || die "CACHE_DIR must be an absolute path"
   [[ "$ALLOW_ROOT_PASSWORD_SSH" == "0" || "$ALLOW_ROOT_PASSWORD_SSH" == "1" ]] || die "ALLOW_ROOT_PASSWORD_SSH must be 0 or 1"
   [[ "$DISK_SSD" == "0" || "$DISK_SSD" == "1" ]] || die "DISK_SSD must be 0 or 1"

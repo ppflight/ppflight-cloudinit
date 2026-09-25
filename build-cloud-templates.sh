@@ -241,6 +241,7 @@ interactive_main() {
   choose_customer_backup
   printf '\n制作配置：模板=%s，镜像=%s，安装位置=%s，网桥=%s，VLAN=%s\n' \
     "$ONLY_TEMPLATES" "$FILE_STORAGE" "$IMAGE_STORAGE" "$BRIDGE" "${VLAN_TAG:-无标签}"
+  printf '模板系统盘目标：%s（G 按 GiB 计算；LITE S 需要 10G）。\n' "$DISK_SIZE"
   printf '将重新制作所选模板并新增缺失模板；已被克隆引用或不是本项目的模板会阻止替换。\n先在独立镜像中安装官方更新和基础软件，全部成功后才替换旧模板。\nPVE 及新模板均关闭后台自动升级，保留手动更新。\n'
   confirm_install || return 0
   save_customer_backup

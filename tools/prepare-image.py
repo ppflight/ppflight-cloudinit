@@ -50,8 +50,8 @@ def prepare(source, target, size, profile, firmware="seabios"):
     if info.get('format') != 'qcow2' or info.get('backing-filename'):
         raise ValueError('Official source must be a standalone qcow2')
     virtual_size = size_bytes(size)
-    if virtual_size <= info['virtual-size']:
-        raise ValueError('DISK_SIZE must be larger than the official source disk for offline preparation')
+    if virtual_size < info['virtual-size']:
+        raise ValueError('Official source exceeds DISK_SIZE; use a smaller official image. Automatic disk shrinking is not supported; original templates preserved')
     if shutil.disk_usage(target.parent).free < virtual_size + 2 * 1024**3:
         raise ValueError('Insufficient preparation space; free DISK_SIZE plus 2 GiB before rebuilding')
     mounts = run(['guestfish', '--ro', '--format=qcow2', '-a', str(source), '-i', 'mountpoints'], True)
@@ -62,8 +62,11 @@ def prepare(source, target, size, profile, firmware="seabios"):
     if not re.fullmatch(r'[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}', root_uuid):
         raise ValueError('Cannot determine the guest root filesystem UUID')
     try:
-        run(['qemu-img', 'create', '-f', 'qcow2', str(target), size], timeout=60)
-        run(['virt-resize', '--format', 'qcow2', '--output-format', 'qcow2', '--expand', root, str(source), str(target)])
+        if virtual_size == info['virtual-size']:
+            run(['qemu-img', 'convert', '-f', 'qcow2', '-O', 'qcow2', str(source), str(target)])
+        else:
+            run(['qemu-img', 'create', '-f', 'qcow2', str(target), size], timeout=60)
+            run(['virt-resize', '--format', 'qcow2', '--output-format', 'qcow2', '--expand', root, str(source), str(target)])
         run(['virt-customize', '--format', 'qcow2', '-a', str(target), '--network', '--memsize', '2048', '--smp', '2',
              '--write', '/etc/ppflight-offline-build:' + root_uuid,
              '--write', '/etc/ppflight-build-firmware:' + firmware,
@@ -80,9 +83,12 @@ def prepare(source, target, size, profile, firmware="seabios"):
         packages = run(['guestfish', '--ro', '--format=qcow2', '-a', str(target), '-i', 'cat', '/var/lib/ppflight-template/packages.tsv'], True)
         if not packages or 'qemu-guest-agent' not in packages or 'cloud-init' not in packages:
             raise ValueError('Package inventory is incomplete')
+        prepared_info = json.loads(run(['qemu-img', 'info', '--output=json', str(target)], True, 60))
+        if prepared_info.get('format') != 'qcow2' or prepared_info.get('virtual-size') != virtual_size or prepared_info.get('backing-filename'):
+            raise ValueError('Prepared disk size or independence does not match the requested template')
         run(['qemu-img', 'check', '-f', 'qcow2', str(target)], timeout=300)
         digest = file_hash(target)
-        target.with_suffix('.json').write_text(json.dumps({'firmware': firmware, 'preparedSha256': digest, 'guestReport': report, 'packages': packages.splitlines()}, indent=2) + '\n')
+        target.with_suffix('.json').write_text(json.dumps({'firmware': firmware, 'virtualSizeBytes': virtual_size, 'preparedSha256': digest, 'guestReport': report, 'packages': packages.splitlines()}, indent=2) + '\n')
         print(digest)
     except BaseException:
         target.unlink(missing_ok=True)

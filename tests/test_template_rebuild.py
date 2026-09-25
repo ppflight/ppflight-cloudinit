@@ -115,6 +115,29 @@ class PreparationTests(unittest.TestCase):
             self.assertFalse(target.with_suffix('.json').exists())
 
     def test_success_records_actual_prepared_hash_and_guest_report(self):
+        self.exercise_preparation(2, 10, 'ovmf')
+
+    def test_equal_size_uefi_image_is_copied_without_resize(self):
+        self.exercise_preparation(10, 10, 'ovmf')
+
+    def test_equal_size_legacy_image_is_copied_without_resize(self):
+        self.exercise_preparation(10, 10, 'seabios')
+
+    def test_wrong_final_capacity_removes_prepared_image(self):
+        self.exercise_preparation(2, 10, 'ovmf', final_gib=16)
+
+    def test_source_larger_than_target_is_rejected_before_writes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory); source=root/'official.img'; target=root/'prepared.img'; profile=root/'profile.sh'
+            source.write_bytes(b'official'); profile.write_text('exit 0')
+            with patch.object(prepare, 'run', return_value=json.dumps({'format':'qcow2','virtual-size':16*1024**3})) as run:
+                with self.assertRaisesRegex(ValueError, 'exceeds DISK_SIZE'):
+                    prepare.prepare(source, target, '10G', profile, 'ovmf')
+            self.assertEqual(1, run.call_count)
+            self.assertFalse(target.exists())
+            self.assertEqual(b'official',source.read_bytes())
+
+    def exercise_preparation(self, source_gib, target_gib, firmware, final_gib=None):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory); source=root/'official.img'; target=root/'prepared.img'; profile=root/'profile.sh'
             source.write_bytes(b'official'); profile.write_text('exit 0')
@@ -122,12 +145,15 @@ class PreparationTests(unittest.TestCase):
             def run(args, capture=False, timeout=7200):
                 commands.append(args)
                 if args[:2] == ['qemu-img','info']:
-                    return '{"format":"qcow2","virtual-size":1024}'
+                    size = source_gib if args[-1] == str(source) else (final_gib or target_gib)
+                    return json.dumps({'format':'qcow2','virtual-size':size*1024**3})
                 if 'vfs-uuid' in args:
                     return '12345678-1234-1234-1234-123456789abc'
                 if 'mountpoints' in args:
-                    return '/dev/sda1: /'
-                if args[:2] == ['qemu-img','create']:
+                    return '/dev/sda1: /\n/dev/sda15: /boot/efi'
+                if 'is-file' in args:
+                    return 'true'
+                if args[:2] in (['qemu-img','create'], ['qemu-img','convert']):
                     target.write_bytes(b'prepared')
                 if args[-1] == '/var/lib/ppflight-template/packages.tsv':
                     return 'qemu-guest-agent\t1.0\ncloud-init\t1.0'
@@ -136,7 +162,16 @@ class PreparationTests(unittest.TestCase):
                 return ''
             with patch.object(prepare,'run',side_effect=run), patch.object(prepare.shutil,'disk_usage') as usage:
                 usage.return_value.free=30*1024**3
-                prepare.prepare(source,target,'16G',profile)
+                if final_gib is not None:
+                    with self.assertRaisesRegex(ValueError, 'Prepared disk size'):
+                        prepare.prepare(source,target,f'{target_gib}G',profile,firmware)
+                    self.assertFalse(target.exists())
+                    self.assertFalse(target.with_suffix('.json').exists())
+                    self.assertEqual(b'official',source.read_bytes())
+                    return
+                prepare.prepare(source,target,f'{target_gib}G',profile,firmware)
+            self.assertEqual(source_gib < target_gib, any(c[0]=='virt-resize' for c in commands))
+            self.assertEqual(source_gib == target_gib, any(c[:2]==['qemu-img','convert'] for c in commands))
             self.assertEqual(b'official',source.read_bytes())
             self.assertEqual(prepare.file_hash(target),json.loads(target.with_suffix('.json').read_text())['preparedSha256'])
             customize=next(c for c in commands if c[0]=='virt-customize')

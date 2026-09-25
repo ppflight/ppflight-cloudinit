@@ -54,7 +54,7 @@ curl -fsSL https://raw.githubusercontent.com/ppflight/ppflight-cloudinit/main/in
 
 制作阶段保留官方镜像的软件源、发行版默认签名验证与官方镜像网络，不加入第三方源或切换国内镜像。更新包括当前发行版仓库提供的安全和维护更新，不跨发行版大版本。CentOS Stream 是滚动维护发行线，不能把其更新描述成“仅安全补丁”。交付后关闭自动升级和自动重启，管理员/客户仍可手动更新。固定源镜像 SHA-256 与更新后镜像 SHA-256 分开记录；更新后的包版本和时间保存在镜像 `/var/lib/ppflight-template/` 及宿主构建报告中。隔离启动报告另存为 `ppflight-template-VMID-boot.json`，不等于客户公网连通性与防冒用验收。
 
-首次运行会按需安装 Debian 官方 `guestfs-tools`、`guestfish`（使用 `--no-remove`，不允许为满足依赖删除 PVE 包）。这些是制作时使用的离线工具，不是常驻 Agent，也不用额外给客户业务 VLAN 分配临时地址；它们使用宿主网络下载更新。预留独立镜像制作空间，默认磁盘 16 GiB；根分区布局不能安全识别时停止。旧 VPS 不会随模板重做而重装或升级。
+首次运行会按需安装 Debian 官方 `guestfs-tools`、`guestfish`（使用 `--no-remove`，不允许为满足依赖删除 PVE 包）。这些是制作时使用的离线工具，不是常驻 Agent，也不用额外给客户业务 VLAN 分配临时地址；它们使用宿主网络下载更新。预留独立镜像制作空间，默认磁盘 10 GiB（适配 LITE S，其他套餐在克隆时扩容）；根分区布局不能安全识别时停止。旧 VPS 不会随模板重做而重装或升级。
 
 离线镜像安装工具的行为依据 [virt-customize 官方文档](https://libguestfs.org/virt-customize.1.html)；磁盘扩容依据 [virt-resize 官方文档](https://libguestfs.org/virt-resize.1.html)。
 
@@ -80,3 +80,7 @@ Debian/Ubuntu 镜像扩容后会重新安装 BIOS GRUB，并在内核启动阶�
 3.2.1 将 UEFI 启动顺序设为 `scsi0;ide2`，确保 OVMF 首次启动初始化 Cloud-Init 光盘；系统盘仍优先。启动验证也使用相同的 IDE 通道和严格启动顺序。
 
 已用 3.2.0 制作的模板不需要重做磁盘：在 PVE 上下载完整仓库后，先运行 `python3 tools/repair-uefi-boot.py` 检查，再加 `--apply` 应用。工具只接受目录内、停止且未锁定的项目 UEFI 模板，使用配置摘要防并发，并回读确认只改变启动顺序；不操作普通 VM、Legacy 模板或磁盘内容。
+
+### 3.2.2：10 GiB 基础模板
+
+默认 `DISK_SIZE=10G`，示例配置同步为 10 GiB。源镜像等于目标尺寸时独立转换，小于目标时扩容；大于目标时停止并保留原模板，禁止自动缩盘或悄悄改大交付容量。准备结束再次核对虚拟容量；仍须通过原有 UEFI/Legacy、Cloud-init、QGA 启动验证才替换模板。先前保存的配置若仍含 `DISK_SIZE=16G`，重建前需明确改为 `10G`。修改 GitHub 文件不会自动改变 PVE 里已经生成的 16 GiB 模板，须在每台 PVE 重新运行制作工具；已有客户 VM 不改动。
