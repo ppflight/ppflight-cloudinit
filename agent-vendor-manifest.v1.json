@@ -73,7 +73,7 @@
     {
       "path": "tools/verify-guest-boot.py",
       "requiredAtRuntime": true,
-      "sha256": "22665ab222f2eda48df5d0f33d4bd7d30db22a15c5779cb36021beea4afb66cf"
+      "sha256": "693c0d50c540ae893b57b9dcac60eabd5a9f2c9ccb014c318254c103cbaa4232"
     },
     {
       "path": "tools/configure-qga.py",

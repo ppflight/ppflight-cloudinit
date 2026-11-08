@@ -47,6 +47,18 @@ def firmware_arguments(firmware, root, directory=Path('/usr/share/pve-edk2-firmw
             '-drive', 'if=pflash,format=raw,unit=1,file='+str(root/'efi-vars.fd')]
 
 
+def create_seed(root, vendor, without_vendor):
+    files = ['user-data', 'meta-data', 'network-config']
+    # An empty #cloud-config document is a recoverable error in newer cloud-init.
+    # Model absent vendor-data by omitting the optional file, not an empty header.
+    if not without_vendor:
+        (root/'vendor-data').write_bytes(Path(vendor).read_bytes())
+        files.append('vendor-data')
+    subprocess.run(['genisoimage', '-quiet', '-output', str(root/'seed.iso'),
+                    '-volid', 'cidata', '-joliet', '-rock'] + files,
+                   cwd=root, check=True, timeout=30)
+
+
 def verify(image, vendor, timeout=600, firmware="seabios", memory_mb=2048, without_vendor=False):
     if firmware not in ("ovmf", "seabios"):
         raise ValueError("Unsupported firmware")
@@ -59,10 +71,8 @@ def verify(image, vendor, timeout=600, firmware="seabios", memory_mb=2048, witho
         root = Path(directory)
         (root/'meta-data').write_text('instance-id: ppflight-offline-validation\nlocal-hostname: ppflight-validation\n')
         (root/'user-data').write_text('#cloud-config\nusers: []\ndisable_root: true\nssh_pwauth: false\n')
-        (root/'vendor-data').write_bytes(b'#cloud-config\n' if without_vendor else Path(vendor).read_bytes())
         (root/'network-config').write_text('version: 1\nconfig:\n  - type: physical\n    name: eth0\n    mac_address: "52:54:00:12:34:56"\n    subnets:\n      - type: static\n        address: 10.0.2.15/24\n        gateway: 10.0.2.2\n  - type: nameserver\n    address: [10.0.2.3]\n')
-        subprocess.run(['genisoimage','-quiet','-output',str(root/'seed.iso'),'-volid','cidata','-joliet','-rock',
-                        'user-data','meta-data','vendor-data','network-config'],cwd=root,check=True,timeout=30)
+        create_seed(root, vendor, without_vendor)
         subprocess.run(['qemu-img','create','-q','-f','qcow2','-F','qcow2','-b',str(image),str(root/'overlay.qcow2')],check=True,timeout=30)
         args=['qemu-system-x86_64','-enable-kvm','-cpu','host','-m',str(memory_mb),'-smp','2',
               '-display','none','-monitor','none','-qmp','unix:'+str(root/'qmp.sock')+',server=on,wait=off','-serial','file:'+str(root/'serial.log'),

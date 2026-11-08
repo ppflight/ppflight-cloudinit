@@ -188,6 +188,21 @@ class PreparationTests(unittest.TestCase):
 
 
 class FirmwareTests(unittest.TestCase):
+    def test_no_vendor_seed_omits_the_document_instead_of_invalid_empty_yaml(self):
+        boot = load('verify-guest-boot')
+        for without_vendor in (True, False):
+            with tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                vendor = root/'input.yaml'
+                vendor.write_text('#cloud-config\npackage_update: false\n')
+                with patch.object(boot.subprocess, 'run') as run:
+                    boot.create_seed(root, vendor, without_vendor)
+                command = run.call_args.args[0]
+                self.assertEqual(not without_vendor, 'vendor-data' in command)
+                self.assertEqual(not without_vendor, (root/'vendor-data').exists())
+                if not without_vendor:
+                    self.assertEqual(vendor.read_bytes(), (root/'vendor-data').read_bytes())
+
     def test_uefi_requires_an_esp_before_creating_any_image(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory); source=root/'source'; target=root/'target'; profile=root/'profile'
