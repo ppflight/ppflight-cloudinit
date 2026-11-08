@@ -125,12 +125,19 @@ for unit in "${automatic_units[@]}"; do
 done
 # Do not ship shared SSH host keys, instance state, machine identity or seed files.
 cloud-init clean --logs --seed
+# Baked per-instance hook also works when the panel replaces cicustom vendor-data
+# with its own network snippet. Do not size buffers using the build appliance RAM.
+install -D -m 0755 /var/tmp/ppflight-guest-tcp-tune.py /usr/local/sbin/ppflight-tcp-tune
+install -d -m 0755 /var/lib/cloud/scripts/per-instance
+printf '#!/bin/sh\nexec /usr/local/sbin/ppflight-tcp-tune\n' > /var/lib/cloud/scripts/per-instance/ppflight-tcp-tune
+chmod 0755 /var/lib/cloud/scripts/per-instance/ppflight-tcp-tune
 rm -f /etc/ssh/ssh_host_* /var/lib/dbus/machine-id /var/lib/systemd/random-seed
 truncate -s 0 /etc/machine-id
 passwd -l root
 rm -f /root/.ssh/authorized_keys
 # Record what was actually installed, separately from the original source checksum.
 printf 'updated_at_utc=%s\nos=%s\nversion=%s\nupdates=official-repositories\nautomatic_upgrades=disabled\nautomatic_reboot=disabled\n' "$(date -u '+%FT%TZ')" "$ID" "$VERSION_ID" > /var/lib/ppflight-template/build-info
+printf 'tcp_tuning=first-instance-detected-ram-300mbps-200ms\n' >> /var/lib/ppflight-template/build-info
 rm -f /etc/ppflight-offline-build /etc/ppflight-build-firmware
 # Debian's appliance may not ship the SELinux relabel feature. Use the guest's
 # own current policy and setfiles, and fail rather than defer to a reboot.

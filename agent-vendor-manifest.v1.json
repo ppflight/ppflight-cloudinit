@@ -1,6 +1,6 @@
 {
   "schemaVersion": "ppflight.agent-vendor-manifest/v1",
-  "bundleVersion": "3.2.2",
+  "bundleVersion": "3.3.0",
   "catalogRevision": "2026-09-21.2",
   "catalogSha256": "6343b841268e2973b8a8e7ce505f788444b298afd4593eb09b78132447df99c9",
   "entrypoint": "tools/ppflight-template-bootstrap.py",
@@ -47,7 +47,7 @@
     },
     {
       "path": "tools/build-template-engine.sh",
-      "sha256": "18a0dc84ebe83c2b8c4968a2b201754b10df20bec17890fb6f1efa340b3527ba",
+      "sha256": "b2fd572b2fb6446dcfc6b0d9f28c47d279a823be4aa49680864aec2d729cd10d",
       "requiredAtRuntime": true
     },
     {
@@ -63,17 +63,17 @@
     {
       "path": "tools/prepare-image.py",
       "requiredAtRuntime": true,
-      "sha256": "fda83ffc5c41bf313534bac457410c3be5ce81c7d98cfc306ecac56823bf273c"
+      "sha256": "11812089a688445e0e0a712e4c65c0f6c7bb34f7063298ece8dd28c5f4cea1f7"
     },
     {
       "path": "tools/prepare-guest.sh",
       "requiredAtRuntime": true,
-      "sha256": "c122b06f81b017908ad24e00d39ae103c462e09498af05edb8c58debf1672a12"
+      "sha256": "1ccab750e1d2f0f1904898bf289e13dacdf0b5d065b43c9fd34f7c16b68dfba4"
     },
     {
       "path": "tools/verify-guest-boot.py",
       "requiredAtRuntime": true,
-      "sha256": "a74ab17b54f7da02dfa2eb24c4e2286315ac01e18ca79dc723d82976dafad447"
+      "sha256": "22665ab222f2eda48df5d0f33d4bd7d30db22a15c5779cb36021beea4afb66cf"
     },
     {
       "path": "tools/configure-qga.py",
@@ -89,6 +89,11 @@
       "path": "tools/repair-uefi-boot.py",
       "requiredAtRuntime": false,
       "sha256": "4fa242588d3d7aa5d13be4ff236abdce07d62e3a778d9ebace9ab2578b015a73"
+    },
+    {
+      "path": "tools/guest-tcp-tune.py",
+      "requiredAtRuntime": true,
+      "sha256": "50f75b884de32d8bf2fcc705fc7ea00d3f68d732048de480ebae84f6d09d5c9d"
     }
   ],
   "dependencies": {

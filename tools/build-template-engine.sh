@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-readonly SCRIPT_VERSION="3.2.2"
+readonly SCRIPT_VERSION="3.3.0"
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)" || exit 1
 readonly SCRIPT_DIR
 CATALOG_HELPER="$SCRIPT_DIR/tools/ppflight-template-bootstrap.py"
@@ -689,6 +689,7 @@ prepare_images() {
     PREPARED_HASHES[$vmid]="$(python3 "$SCRIPT_DIR/tools/prepare-image.py" --source "$CACHE_DIR/$image" --target "$prepared" --size "$DISK_SIZE" --firmware "$firmware")" || die "Offline preparation failed for $name; no template VMID was changed"
     [[ "${PREPARED_HASHES[$vmid]}" =~ ^[0-9a-f]{64}$ ]] || die 'Invalid prepared image digest'
     python3 "$SCRIPT_DIR/tools/verify-guest-boot.py" --image "$prepared" --vendor "$snippet_dir/$snippet" --firmware "$firmware" || die "Isolated boot verification failed for $name; old templates preserved"
+    python3 "$SCRIPT_DIR/tools/verify-guest-boot.py" --image "$prepared" --vendor "$snippet_dir/$snippet" --firmware "$firmware" --without-vendor --memory-mb 768 || die "Standalone low-memory first boot failed for $name; old templates preserved"
   done
 }
 
@@ -871,6 +872,7 @@ write_manifest() {
       printf 'prepared_sha256=%s|%s\n' "$vmid" "${PREPARED_HASHES[$vmid]}"
       install -m 0644 "$PREPARED_DIR/$vmid/${image%.*}.json" "$CACHE_DIR/ppflight-template-$vmid-build.json"
       install -m 0644 "$PREPARED_DIR/$vmid/${image%.*}.boot.json" "$CACHE_DIR/ppflight-template-$vmid-boot.json"
+      install -m 0644 "$PREPARED_DIR/$vmid/${image%.*}.standalone-boot.json" "$CACHE_DIR/ppflight-template-$vmid-standalone-boot.json"
     done
   } > "$manifest"
   chmod 0644 "$manifest"

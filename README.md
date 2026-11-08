@@ -48,6 +48,23 @@ curl -fsSL https://raw.githubusercontent.com/ppflight/ppflight-cloudinit/main/in
 
 ## 重新制作与更新策略
 
+### 3.3.0：独立的首次启动 TCP 调优
+
+保留上述 12 个系统选项，在各自发行版内安装当前官方补丁。镜像预装
+`/usr/local/sbin/ppflight-tcp-tune`，由 cloud-init 的 per-instance 脚本调用，
+无需官网发送内存/带宽参数；即使面板替换了 `cicustom` vendor-data 仍可执行。
+不是在制作时运行调优，因此不会把制作器的 2GB 内存误当成客户规格。
+
+- 首次启动读取客体 `/proc/meminfo`，参考带宽固定 300Mbps、RTT 固定 200ms。
+- 使用发行版内核原生 BBR 和 FQ，按参考 BDP 与实际内存设置 TCP 收发缓冲上限；单个方向的上限不超过实际内存 4%。这不是所有连接总和的保证，系统总 TCP 内存仍交给内核管理。
+- 300Mbps 是缓冲计算参考，不是限速，也不保证不同网络路径下的最佳吞吐；实际套餐限速仍在宿主侧。
+- 不清空 `/etc/sysctl.conf`，不创建 Swap，不安装第三方内核，不执行远程脚本，不调整 MTU、ECN 或全局转发。配置只写入 `zz-ppflight-tcp.conf` 和 BBR 模块加载文件。
+- 借鉴 [nuomiiiii/BBR](https://github.com/nuomiiiii/BBR/blob/main/bbr.sh) 的 BDP/RAM 预算思路，使用独立的非交互实现，并非原脚本所有设置的逐项复制；不使用新内核已废弃的 `tcp_adv_win_scale`。
+- 客户以后修改参数不会在每次重启时被重算覆盖；主动升内存后可自行运行 `ppflight-tcp-tune` 重算。执行记录在 `/var/lib/ppflight-template/tcp-tuning.json`。
+
+每个镜像替换前验证两次独立启动：2GB + vendor-data，以及 768MB + 无 vendor-data。
+检查 cloud-init、QGA、内核实际 BBR/FQ、缓冲上限与重复执行一致性。此验证不等于公网吞吐或所有客户业务测试。
+
 再次运行同一命令并选择 `ALL`，会重新制作所选模板：9000–9009 为 UEFI，9010–9011 为 Legacy。选定旧模板必须名称和 `ppflight-cloudinit` 标签均匹配、处于停止状态、无锁、没有关联克隆或其他 VM 磁盘引用。目前自动替换仅支持**本地 ZFS 模板存储**（如 PPFlight 的 `vpspool`）；其他存储上的旧模板会停止并保留，不猜测依赖关系。新模板仍支持符合原条件的存储。
 
 构建流程为：检查所有 VMID 和克隆依赖 → 下载并验证官方镜像 → 在独立 qcow2 中扩容、安装发行版当前更新及基础软件 → 清理机器身份和 SSH 主机密钥 → 用临时 overlay 隔离启动，确认 QGA 和 Cloud-init 完成 → 再次检查旧模板 → 替换并回读验证。所有选定镜像都准备成功后才开始替换；下载、更新或依赖检查失败时，旧模板尚未被删除。开始替换后若 PVE 导入失败，会报告失败，不声称批次原子回滚；修复后可重新运行。

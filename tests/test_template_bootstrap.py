@@ -203,6 +203,7 @@ class CatalogTests(unittest.TestCase):
                 "tools/template-existing.py",
                 "tools/prepare-image.py",
                 "tools/configure-qga.py",
+                "tools/guest-tcp-tune.py",
                 "tools/verify-guest-boot.py",
                 "tools/repair-uefi-boot.py",
                 "tools/prepare-guest.sh",

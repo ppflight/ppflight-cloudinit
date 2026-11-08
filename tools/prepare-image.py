@@ -71,8 +71,9 @@ def prepare(source, target, size, profile, firmware="seabios"):
              '--write', '/etc/ppflight-offline-build:' + root_uuid,
              '--write', '/etc/ppflight-build-firmware:' + firmware,
              '--upload', str(profile.with_name('configure-qga.py')) + ':/var/tmp/ppflight-configure-qga.py',
+             '--upload', str(profile.with_name('guest-tcp-tune.py')) + ':/var/tmp/ppflight-guest-tcp-tune.py',
              '--upload', str(profile) + ':/var/tmp/ppflight-prepare-guest.sh',
-             '--run-command', 'bash /var/tmp/ppflight-prepare-guest.sh', '--delete', '/var/tmp/ppflight-prepare-guest.sh', '--delete', '/var/tmp/ppflight-configure-qga.py', '--no-selinux-relabel', '--no-logfile'])
+             '--run-command', 'bash /var/tmp/ppflight-prepare-guest.sh', '--delete', '/var/tmp/ppflight-prepare-guest.sh', '--delete', '/var/tmp/ppflight-configure-qga.py', '--delete', '/var/tmp/ppflight-guest-tcp-tune.py', '--no-selinux-relabel', '--no-logfile'])
         if firmware == 'ovmf':
             efi = run(['guestfish', '--ro', '--format=qcow2', '-a', str(target), '-i', 'is-file', '/boot/efi/EFI/BOOT/BOOTX64.EFI'], True)
             if efi != 'true':

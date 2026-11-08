@@ -47,7 +47,7 @@ def firmware_arguments(firmware, root, directory=Path('/usr/share/pve-edk2-firmw
             '-drive', 'if=pflash,format=raw,unit=1,file='+str(root/'efi-vars.fd')]
 
 
-def verify(image, vendor, timeout=360, firmware="seabios"):
+def verify(image, vendor, timeout=600, firmware="seabios", memory_mb=2048, without_vendor=False):
     if firmware not in ("ovmf", "seabios"):
         raise ValueError("Unsupported firmware")
     image = Path(image).resolve()
@@ -59,12 +59,12 @@ def verify(image, vendor, timeout=360, firmware="seabios"):
         root = Path(directory)
         (root/'meta-data').write_text('instance-id: ppflight-offline-validation\nlocal-hostname: ppflight-validation\n')
         (root/'user-data').write_text('#cloud-config\nusers: []\ndisable_root: true\nssh_pwauth: false\n')
-        (root/'vendor-data').write_bytes(Path(vendor).read_bytes())
+        (root/'vendor-data').write_bytes(b'#cloud-config\n' if without_vendor else Path(vendor).read_bytes())
         (root/'network-config').write_text('version: 1\nconfig:\n  - type: physical\n    name: eth0\n    mac_address: "52:54:00:12:34:56"\n    subnets:\n      - type: static\n        address: 10.0.2.15/24\n        gateway: 10.0.2.2\n  - type: nameserver\n    address: [10.0.2.3]\n')
         subprocess.run(['genisoimage','-quiet','-output',str(root/'seed.iso'),'-volid','cidata','-joliet','-rock',
                         'user-data','meta-data','vendor-data','network-config'],cwd=root,check=True,timeout=30)
         subprocess.run(['qemu-img','create','-q','-f','qcow2','-F','qcow2','-b',str(image),str(root/'overlay.qcow2')],check=True,timeout=30)
-        args=['qemu-system-x86_64','-enable-kvm','-cpu','host','-m','2048','-smp','2',
+        args=['qemu-system-x86_64','-enable-kvm','-cpu','host','-m',str(memory_mb),'-smp','2',
               '-display','none','-monitor','none','-qmp','unix:'+str(root/'qmp.sock')+',server=on,wait=off','-serial','file:'+str(root/'serial.log'),
               '-device','virtio-scsi-pci,id=scsi0',
               '-drive','file='+str(root/'overlay.qcow2')+',if=none,id=osdisk,format=qcow2',
@@ -114,6 +114,24 @@ command -v chronyd
 command -v growpart
 command -v curl
 cat /var/lib/ppflight-template/build-info
+uname -r
+test "$(sysctl -n net.ipv4.tcp_congestion_control)" = bbr
+test "$(sysctl -n net.core.default_qdisc)" = fq
+python3 - <<'PY'
+import json
+from pathlib import Path
+r = json.loads(Path('/var/lib/ppflight-template/tcp-tuning.json').read_text())
+memory = int(next(line.split()[1] for line in Path('/proc/meminfo').read_text().splitlines() if line.startswith('MemTotal:'))) * 1024
+assert r['memoryBytes'] == memory
+assert r['referenceMbps'] == 300 and r['referenceRttMs'] == 200
+assert int(r['settings']['net.core.wmem_max']) <= memory * 4 // 100
+for key, expected in r['settings'].items():
+    assert (Path('/proc/sys') / key.replace('.', '/')).read_text().split() == expected.split(), key
+print(json.dumps(r, sort_keys=True))
+PY
+before=$(sha256sum /etc/sysctl.d/zz-ppflight-tcp.conf)
+/usr/local/sbin/ppflight-tcp-tune
+test "$before" = "$(sha256sum /etc/sysctl.d/zz-ppflight-tcp.conf)"
 if command -v getenforce >/dev/null; then
  test "$(getenforce)" = Enforcing
 fi
@@ -135,7 +153,7 @@ done
                         output=base64.b64decode(result.get('out-data','')).decode(errors='replace')
                         if result.get('exitcode') != 0:
                             raise RuntimeError('First-boot verification failed (exit '+str(result.get('exitcode'))+'): '+output[-7000:]+'\n'+base64.b64decode(result.get('err-data','')).decode(errors='replace')[-4000:])
-                        return {'firmware':firmware,'secureBoot':False,'qga':'ready','cloudInit':'done','network':'isolated-no-uplink','output':output,'rootFilesystemExpanded':True}
+                        return {'firmware':firmware,'secureBoot':False,'qga':'ready','cloudInit':'done','network':'isolated-no-uplink','memoryMb':memory_mb,'withoutVendor':without_vendor,'tcpTuning':'verified','output':output,'rootFilesystemExpanded':True}
                     time.sleep(2)
                 raise TimeoutError('Cloud-init verification timed out')
             except BaseException:
@@ -156,9 +174,12 @@ def main():
     p.add_argument('--image',required=True)
     p.add_argument('--vendor',required=True)
     p.add_argument('--firmware', choices=['ovmf', 'seabios'], default='seabios')
+    p.add_argument('--memory-mb', type=int, choices=[512, 768, 1024, 2048], default=2048)
+    p.add_argument('--without-vendor', action='store_true')
     args=p.parse_args()
-    result=verify(args.image,args.vendor,firmware=args.firmware)
-    Path(args.image).with_suffix('.boot.json').write_text(json.dumps(result,indent=2)+'\n')
+    result=verify(args.image,args.vendor,firmware=args.firmware,memory_mb=args.memory_mb,without_vendor=args.without_vendor)
+    suffix = '.standalone-boot.json' if args.without_vendor else '.boot.json'
+    Path(args.image).with_suffix(suffix).write_text(json.dumps(result,indent=2)+'\n')
     print('Isolated boot passed: QGA ready; cloud-init completed; automatic updates disabled')
 
 
