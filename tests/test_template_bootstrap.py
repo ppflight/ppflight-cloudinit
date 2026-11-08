@@ -473,7 +473,7 @@ class CLITests(unittest.TestCase):
         )
         value = json.loads(result.stdout)
         self.assertEqual(value["state"], "succeeded")
-        self.assertEqual(value["catalog"]["catalogRevision"], "2026-11-08.1")
+        self.assertEqual(value["catalog"]["catalogRevision"], "2026-11-08.2")
 
 
 if __name__ == "__main__":

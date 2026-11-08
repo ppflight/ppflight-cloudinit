@@ -1,8 +1,8 @@
 {
   "schemaVersion": "ppflight.template-catalog/v1",
   "catalogId": "ppflight-proxmox-templates",
-  "catalogRevision": "2026-11-08.1",
-  "issuedAt": "2026-11-08T15:15:00Z",
+  "catalogRevision": "2026-11-08.2",
+  "issuedAt": "2026-11-08T15:57:14Z",
   "websitePath": "/vps/proxmox-templates",
   "items": [
     {
@@ -18,11 +18,11 @@
       "source": {
         "kind": "official-cloud-image",
         "urlKey": "ubuntu-jammy-release-amd64",
-        "sha256": "c0a5af17e6c0f76351fe07e2fffef3011dab1facb8a8ed5701dcf648dabd4f0a",
+        "sha256": "f77bc6d59cb8deaa9657095736b5f5003f7705b47055f01823459715c967de6a",
         "format": "qcow2",
         "upstreamChecksum": {
           "algorithm": "sha256",
-          "value": "c0a5af17e6c0f76351fe07e2fffef3011dab1facb8a8ed5701dcf648dabd4f0a"
+          "value": "f77bc6d59cb8deaa9657095736b5f5003f7705b47055f01823459715c967de6a"
         }
       },
       "target": {
@@ -32,7 +32,7 @@
         "agentEnabled": true,
         "firmware": "ovmf"
       },
-      "minimumBytes": 734972416,
+      "minimumBytes": 730617344,
       "build": {
         "family": "debian",
         "templateName": "ubuntu-2204",
@@ -53,11 +53,11 @@
       "source": {
         "kind": "official-cloud-image",
         "urlKey": "ubuntu-noble-release-amd64",
-        "sha256": "d0fe84bb5f80853425fa6be28e2c106f30104c3cfe8611933f2e65c9b63f0e30",
+        "sha256": "04e8f2461a16a44e78a370284471f29616cdd9baf1893df25807b71f985b6c94",
         "format": "qcow2",
         "upstreamChecksum": {
           "algorithm": "sha256",
-          "value": "d0fe84bb5f80853425fa6be28e2c106f30104c3cfe8611933f2e65c9b63f0e30"
+          "value": "04e8f2461a16a44e78a370284471f29616cdd9baf1893df25807b71f985b6c94"
         }
       },
       "target": {
@@ -67,7 +67,7 @@
         "agentEnabled": true,
         "firmware": "ovmf"
       },
-      "minimumBytes": 624829952,
+      "minimumBytes": 621284352,
       "build": {
         "family": "debian",
         "templateName": "ubuntu-2404",
@@ -88,11 +88,11 @@
       "source": {
         "kind": "official-cloud-image",
         "urlKey": "almalinux-8-genericcloud-amd64",
-        "sha256": "301873ffbea203cf4e3e77970c8a26eab7e4a3afe7784e0a253a0f3d3dccfab9",
+        "sha256": "e9e4e53fa4e9aef65ec6d16e80f1d18acbe1d1a44a47550f9095c4b1ca31f0d7",
         "format": "qcow2",
         "upstreamChecksum": {
           "algorithm": "sha256",
-          "value": "301873ffbea203cf4e3e77970c8a26eab7e4a3afe7784e0a253a0f3d3dccfab9"
+          "value": "e9e4e53fa4e9aef65ec6d16e80f1d18acbe1d1a44a47550f9095c4b1ca31f0d7"
         }
       },
       "target": {
@@ -102,7 +102,7 @@
         "agentEnabled": true,
         "firmware": "ovmf"
       },
-      "minimumBytes": 1630273536,
+      "minimumBytes": 1664221184,
       "build": {
         "family": "rhel",
         "templateName": "almalinux-8",
@@ -123,11 +123,11 @@
       "source": {
         "kind": "official-cloud-image",
         "urlKey": "debian-13-generic-amd64",
-        "sha256": "ba8c002cbb083698e652b6853a5d1ef78e73f07ac8510dff7563de812c56789f",
+        "sha256": "ee845b8abcc5107441c452a5454a5711b1dabec34b64bc5f370688003d7bf2ff",
         "format": "qcow2",
         "upstreamChecksum": {
           "algorithm": "sha512",
-          "value": "720d9a2d21167e8aa1bb86a8a816658c7beaeec6975c376e15a0761383a869a466cbf7fe11c287c989020070309889dd81c37cd412290531245e3562334e05f3"
+          "value": "1207e6e3efaff8ee77ab7a32c156a3eea6a9e53f94cfc48efbd1f49ba554ca36ac62ab27395aa813a1775a8c0a393b1a1ce5377d9e5670f6113e3110c57fee4b"
         }
       },
       "target": {
@@ -137,7 +137,7 @@
         "agentEnabled": true,
         "firmware": "ovmf"
       },
-      "minimumBytes": 433651712,
+      "minimumBytes": 438829056,
       "build": {
         "family": "debian",
         "templateName": "debian-13",
@@ -158,11 +158,11 @@
       "source": {
         "kind": "official-cloud-image",
         "urlKey": "debian-12-generic-amd64",
-        "sha256": "5b3a3ebcf65bddee9a7eb666f47dee50745a269947929875bd72259bd27e26d8",
+        "sha256": "b242aca2f6dd2fba72c856edf1d9b0df72a9cd093560535142f1e9c9c8128f80",
         "format": "qcow2",
         "upstreamChecksum": {
           "algorithm": "sha512",
-          "value": "ee13344d530f70ca055d880e5c9b61e9af89874af02c5e2a5c26724461c79409e6d76db97c67ab222e71d03c3e33a738a8958fa5c497962f592258e9835cfcb0"
+          "value": "ba6073af9f789c0f7d6b73ec1b23bb207f07f06f2d31bfd3ce5e550fe43eb9415ef983dc0e039014cd59797e0cbea5c32592e6900fa8f974f2e4466b88ff0d80"
         }
       },
       "target": {
@@ -172,7 +172,7 @@
         "agentEnabled": true,
         "firmware": "ovmf"
       },
-      "minimumBytes": 449511424,
+      "minimumBytes": 448790528,
       "build": {
         "family": "debian",
         "templateName": "debian-12",
@@ -263,11 +263,11 @@
       "source": {
         "kind": "official-cloud-image",
         "urlKey": "almalinux-9-genericcloud-amd64",
-        "sha256": "6bdab6376d46d42e4203ace3733efafc7c5d37c7cb443a6cc74750097002d74b",
+        "sha256": "6f94881458dfe966474544b12e86d078d81a600457188045d317b0ce3c3bdca7",
         "format": "qcow2",
         "upstreamChecksum": {
           "algorithm": "sha256",
-          "value": "6bdab6376d46d42e4203ace3733efafc7c5d37c7cb443a6cc74750097002d74b"
+          "value": "6f94881458dfe966474544b12e86d078d81a600457188045d317b0ce3c3bdca7"
         }
       },
       "target": {
@@ -277,7 +277,7 @@
         "agentEnabled": true,
         "firmware": "ovmf"
       },
-      "minimumBytes": 589299712,
+      "minimumBytes": 614662144,
       "build": {
         "family": "rhel",
         "templateName": "almalinux-9",
@@ -332,11 +332,11 @@
       "source": {
         "kind": "official-cloud-image",
         "urlKey": "ubuntu-resolute-release-amd64",
-        "sha256": "4908fb59ccd4e87ae4e8e973b7ef56f535448eacb24a87fd787270c0048987bc",
+        "sha256": "5645d0318ad21f643ebb1ac4567514620e9893380b07b0201fda163baa5b7eb5",
         "format": "qcow2",
         "upstreamChecksum": {
           "algorithm": "sha256",
-          "value": "4908fb59ccd4e87ae4e8e973b7ef56f535448eacb24a87fd787270c0048987bc"
+          "value": "5645d0318ad21f643ebb1ac4567514620e9893380b07b0201fda163baa5b7eb5"
         }
       },
       "target": {
@@ -346,7 +346,7 @@
         "agentEnabled": true,
         "firmware": "ovmf"
       },
-      "minimumBytes": 864411136,
+      "minimumBytes": 859090944,
       "build": {
         "family": "debian",
         "templateName": "ubuntu-2604",
@@ -364,11 +364,11 @@
       "source": {
         "kind": "official-cloud-image",
         "urlKey": "ubuntu-noble-release-amd64",
-        "sha256": "d0fe84bb5f80853425fa6be28e2c106f30104c3cfe8611933f2e65c9b63f0e30",
+        "sha256": "04e8f2461a16a44e78a370284471f29616cdd9baf1893df25807b71f985b6c94",
         "format": "qcow2",
         "upstreamChecksum": {
           "algorithm": "sha256",
-          "value": "d0fe84bb5f80853425fa6be28e2c106f30104c3cfe8611933f2e65c9b63f0e30"
+          "value": "04e8f2461a16a44e78a370284471f29616cdd9baf1893df25807b71f985b6c94"
         }
       },
       "target": {
@@ -378,7 +378,7 @@
         "agentEnabled": true,
         "firmware": "seabios"
       },
-      "minimumBytes": 624829952,
+      "minimumBytes": 621284352,
       "build": {
         "family": "debian",
         "templateName": "ubuntu-2404-legacy",
@@ -396,11 +396,11 @@
       "source": {
         "kind": "official-cloud-image",
         "urlKey": "debian-12-generic-amd64",
-        "sha256": "5b3a3ebcf65bddee9a7eb666f47dee50745a269947929875bd72259bd27e26d8",
+        "sha256": "b242aca2f6dd2fba72c856edf1d9b0df72a9cd093560535142f1e9c9c8128f80",
         "format": "qcow2",
         "upstreamChecksum": {
           "algorithm": "sha512",
-          "value": "ee13344d530f70ca055d880e5c9b61e9af89874af02c5e2a5c26724461c79409e6d76db97c67ab222e71d03c3e33a738a8958fa5c497962f592258e9835cfcb0"
+          "value": "ba6073af9f789c0f7d6b73ec1b23bb207f07f06f2d31bfd3ce5e550fe43eb9415ef983dc0e039014cd59797e0cbea5c32592e6900fa8f974f2e4466b88ff0d80"
         }
       },
       "target": {
@@ -410,7 +410,7 @@
         "agentEnabled": true,
         "firmware": "seabios"
       },
-      "minimumBytes": 449511424,
+      "minimumBytes": 448790528,
       "build": {
         "family": "debian",
         "templateName": "debian-12-legacy",

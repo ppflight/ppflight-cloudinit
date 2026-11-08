@@ -1,8 +1,8 @@
 {
   "schemaVersion": "ppflight.agent-vendor-manifest/v1",
-  "bundleVersion": "3.3.0",
-  "catalogRevision": "2026-11-08.1",
-  "catalogSha256": "97f213df0e3d061b909971173085cdece2c6ee56ef5b9a9312567f8bc5fb2a74",
+  "bundleVersion": "3.3.1",
+  "catalogRevision": "2026-11-08.2",
+  "catalogSha256": "07c01e33806a5ab8147d6bd8c1aff48a0be5775afb8ec419b733740902e1a06d",
   "entrypoint": "tools/ppflight-template-bootstrap.py",
   "files": [
     {
@@ -12,12 +12,12 @@
     },
     {
       "path": "tools/ppflight-template-bootstrap.py",
-      "sha256": "5343edde1413dfc84923ab1b539260872153c6a0bc9a7b1fee082a492a190df4",
+      "sha256": "2c766ed36a25b0e2974e1f474a1de04907574bea9bc2dd0accd893f09e8d003f",
       "requiredAtRuntime": true
     },
     {
       "path": "catalog/template-catalog.v1.json",
-      "sha256": "97f213df0e3d061b909971173085cdece2c6ee56ef5b9a9312567f8bc5fb2a74",
+      "sha256": "07c01e33806a5ab8147d6bd8c1aff48a0be5775afb8ec419b733740902e1a06d",
       "requiredAtRuntime": true
     },
     {
@@ -47,7 +47,7 @@
     },
     {
       "path": "tools/build-template-engine.sh",
-      "sha256": "b2fd572b2fb6446dcfc6b0d9f28c47d279a823be4aa49680864aec2d729cd10d",
+      "sha256": "4c9e5760420310925a70e57b6fad47afe4af1be0e19be144ab338a7d25190593",
       "requiredAtRuntime": true
     },
     {

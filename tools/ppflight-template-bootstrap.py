@@ -90,8 +90,8 @@ BUILDER_SETTING_KEYS = {
 # deliberately no CLI or environment override for any source URL.
 URL_SPECS: Mapping[str, Mapping[str, str]] = {
     "almalinux-9-genericcloud-amd64": {
-        "filename": "AlmaLinux-9-GenericCloud-9.8-20260810.x86_64.qcow2",
-        "url": "https://repo.almalinux.org/almalinux/9/cloud/x86_64/images/AlmaLinux-9-GenericCloud-9.8-20260810.x86_64.qcow2",
+        "filename": "AlmaLinux-9-GenericCloud-9.8-20261102.x86_64.qcow2",
+        "url": "https://repo.almalinux.org/almalinux/9/cloud/x86_64/images/AlmaLinux-9-GenericCloud-9.8-20261102.x86_64.qcow2",
         "checksumUrl": "https://repo.almalinux.org/almalinux/9/cloud/x86_64/images/CHECKSUM",
         "checksumAlgorithm": "sha256"
     },
@@ -103,38 +103,38 @@ URL_SPECS: Mapping[str, Mapping[str, str]] = {
     },
     "ubuntu-resolute-release-amd64": {
         "filename": "ubuntu-26.04-server-cloudimg-amd64.img",
-        "url": "https://cloud-images.ubuntu.com/releases/resolute/release-20260918/ubuntu-26.04-server-cloudimg-amd64.img",
-        "checksumUrl": "https://cloud-images.ubuntu.com/releases/resolute/release-20260918/SHA256SUMS",
+        "url": "https://cloud-images.ubuntu.com/releases/resolute/release-20261016/ubuntu-26.04-server-cloudimg-amd64.img",
+        "checksumUrl": "https://cloud-images.ubuntu.com/releases/resolute/release-20261016/SHA256SUMS",
         "checksumAlgorithm": "sha256"
     },
     "ubuntu-jammy-release-amd64": {
         "filename": "ubuntu-22.04-server-cloudimg-amd64.img",
-        "url": "https://cloud-images.ubuntu.com/releases/jammy/release-20260826/ubuntu-22.04-server-cloudimg-amd64.img",
-        "checksumUrl": "https://cloud-images.ubuntu.com/releases/jammy/release-20260826/SHA256SUMS",
+        "url": "https://cloud-images.ubuntu.com/releases/jammy/release-20261106/ubuntu-22.04-server-cloudimg-amd64.img",
+        "checksumUrl": "https://cloud-images.ubuntu.com/releases/jammy/release-20261106/SHA256SUMS",
         "checksumAlgorithm": "sha256",
     },
     "ubuntu-noble-release-amd64": {
         "filename": "ubuntu-24.04-server-cloudimg-amd64.img",
-        "url": "https://cloud-images.ubuntu.com/releases/noble/release-20260826/ubuntu-24.04-server-cloudimg-amd64.img",
-        "checksumUrl": "https://cloud-images.ubuntu.com/releases/noble/release-20260826/SHA256SUMS",
+        "url": "https://cloud-images.ubuntu.com/releases/noble/release-20261017/ubuntu-24.04-server-cloudimg-amd64.img",
+        "checksumUrl": "https://cloud-images.ubuntu.com/releases/noble/release-20261017/SHA256SUMS",
         "checksumAlgorithm": "sha256",
     },
     "almalinux-8-genericcloud-amd64": {
-        "filename": "AlmaLinux-8-GenericCloud-8.10-20260803.x86_64.qcow2",
-        "url": "https://repo.almalinux.org/almalinux/8/cloud/x86_64/images/AlmaLinux-8-GenericCloud-8.10-20260803.x86_64.qcow2",
+        "filename": "AlmaLinux-8-GenericCloud-8.10-20261026.x86_64.qcow2",
+        "url": "https://repo.almalinux.org/almalinux/8/cloud/x86_64/images/AlmaLinux-8-GenericCloud-8.10-20261026.x86_64.qcow2",
         "checksumUrl": "https://repo.almalinux.org/almalinux/8/cloud/x86_64/images/CHECKSUM",
         "checksumAlgorithm": "sha256",
     },
     "debian-13-generic-amd64": {
-        "filename": "debian-13-generic-amd64-20260826-2582.qcow2",
-        "url": "https://cloud.debian.org/images/cloud/trixie/20260826-2582/debian-13-generic-amd64-20260826-2582.qcow2",
-        "checksumUrl": "https://cloud.debian.org/images/cloud/trixie/20260826-2582/SHA512SUMS",
+        "filename": "debian-13-generic-amd64-20261103-2651.qcow2",
+        "url": "https://cloud.debian.org/images/cloud/trixie/20261103-2651/debian-13-generic-amd64-20261103-2651.qcow2",
+        "checksumUrl": "https://cloud.debian.org/images/cloud/trixie/20261103-2651/SHA512SUMS",
         "checksumAlgorithm": "sha512",
     },
     "debian-12-generic-amd64": {
-        "filename": "debian-12-generic-amd64-20260821-2577.qcow2",
-        "url": "https://cloud.debian.org/images/cloud/bookworm/20260821-2577/debian-12-generic-amd64-20260821-2577.qcow2",
-        "checksumUrl": "https://cloud.debian.org/images/cloud/bookworm/20260821-2577/SHA512SUMS",
+        "filename": "debian-12-generic-amd64-20261026-2643.qcow2",
+        "url": "https://cloud.debian.org/images/cloud/bookworm/20261026-2643/debian-12-generic-amd64-20261026-2643.qcow2",
+        "checksumUrl": "https://cloud.debian.org/images/cloud/bookworm/20261026-2643/SHA512SUMS",
         "checksumAlgorithm": "sha512",
     },
     "centos-stream-9-genericcloud-amd64": {
