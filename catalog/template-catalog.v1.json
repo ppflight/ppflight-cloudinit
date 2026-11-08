@@ -1,8 +1,8 @@
 {
   "schemaVersion": "ppflight.template-catalog/v1",
   "catalogId": "ppflight-proxmox-templates",
-  "catalogRevision": "2026-09-21.2",
-  "issuedAt": "2026-09-21T02:15:00Z",
+  "catalogRevision": "2026-11-08.1",
+  "issuedAt": "2026-11-08T15:15:00Z",
   "websitePath": "/vps/proxmox-templates",
   "items": [
     {
@@ -193,11 +193,11 @@
       "source": {
         "kind": "official-cloud-image",
         "urlKey": "centos-stream-9-genericcloud-amd64",
-        "sha256": "9bc2838008fc212eb9b7c7fdf6ea26f572afdeeaa254fa973ef5cd528b87adcf",
+        "sha256": "ab9c97dd5be775a0171af19d31af5d1b8a79be485d2ac75303bdf76fdbafeed6",
         "format": "qcow2",
         "upstreamChecksum": {
           "algorithm": "sha256",
-          "value": "9bc2838008fc212eb9b7c7fdf6ea26f572afdeeaa254fa973ef5cd528b87adcf"
+          "value": "ab9c97dd5be775a0171af19d31af5d1b8a79be485d2ac75303bdf76fdbafeed6"
         }
       },
       "target": {
@@ -207,7 +207,7 @@
         "agentEnabled": true,
         "firmware": "ovmf"
       },
-      "minimumBytes": 1277493248,
+      "minimumBytes": 1277231104,
       "build": {
         "family": "rhel",
         "templateName": "centos-stream-9",
@@ -228,11 +228,11 @@
       "source": {
         "kind": "official-cloud-image",
         "urlKey": "centos-stream-10-genericcloud-amd64",
-        "sha256": "9cff5cbfd35c0c9070619c83ce9cad65d4eab845c9b83fb72c1b9209453d085b",
+        "sha256": "901b4c1d06e5e79968abee8d4274bfc915777bbd08a340de0be6dd8e6d28576d",
         "format": "qcow2",
         "upstreamChecksum": {
           "algorithm": "sha256",
-          "value": "9cff5cbfd35c0c9070619c83ce9cad65d4eab845c9b83fb72c1b9209453d085b"
+          "value": "901b4c1d06e5e79968abee8d4274bfc915777bbd08a340de0be6dd8e6d28576d"
         }
       },
       "target": {
@@ -242,7 +242,7 @@
         "agentEnabled": true,
         "firmware": "ovmf"
       },
-      "minimumBytes": 1047003136,
+      "minimumBytes": 1047199744,
       "build": {
         "family": "rhel",
         "templateName": "centos-stream-10",

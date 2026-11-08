@@ -138,15 +138,15 @@ URL_SPECS: Mapping[str, Mapping[str, str]] = {
         "checksumAlgorithm": "sha512",
     },
     "centos-stream-9-genericcloud-amd64": {
-        "filename": "CentOS-Stream-GenericCloud-9-20260826.0.x86_64.qcow2",
-        "url": "https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-GenericCloud-9-20260826.0.x86_64.qcow2",
-        "checksumUrl": "https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-GenericCloud-9-20260826.0.x86_64.qcow2.SHA256SUM",
+        "filename": "CentOS-Stream-GenericCloud-9-20261103.0.x86_64.qcow2",
+        "url": "https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-GenericCloud-9-20261103.0.x86_64.qcow2",
+        "checksumUrl": "https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-GenericCloud-9-20261103.0.x86_64.qcow2.SHA256SUM",
         "checksumAlgorithm": "sha256",
     },
     "centos-stream-10-genericcloud-amd64": {
-        "filename": "CentOS-Stream-GenericCloud-10-20260826.0.x86_64.qcow2",
-        "url": "https://cloud.centos.org/centos/10-stream/x86_64/images/CentOS-Stream-GenericCloud-10-20260826.0.x86_64.qcow2",
-        "checksumUrl": "https://cloud.centos.org/centos/10-stream/x86_64/images/CentOS-Stream-GenericCloud-10-20260826.0.x86_64.qcow2.SHA256SUM",
+        "filename": "CentOS-Stream-GenericCloud-10-20261103.0.x86_64.qcow2",
+        "url": "https://cloud.centos.org/centos/10-stream/x86_64/images/CentOS-Stream-GenericCloud-10-20261103.0.x86_64.qcow2",
+        "checksumUrl": "https://cloud.centos.org/centos/10-stream/x86_64/images/CentOS-Stream-GenericCloud-10-20261103.0.x86_64.qcow2.SHA256SUM",
         "checksumAlgorithm": "sha256",
     },
 }

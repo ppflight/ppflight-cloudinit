@@ -2,6 +2,7 @@
 
 ## 3.3.0 - 2026-11-08
 
+- CentOS Stream 9/10 改为官方 20261103.0 固定镜像及对应 SHA256；原 20260826 校验地址已不可用，系统大版本与 VMID 不变。
 - 预装独立的首次初始化 TCP 调优：实际客体内存、固定 300Mbps/200ms 参考，不依赖官网参数或外部下载。
 - 原生 BBR/FQ 与有内存上限的 TCP 自动缓冲；不清空已有配置、不创建 Swap、不替换内核，不写废弃 sysctl。
 - 在镜像内安装 cloud-init per-instance hook，兼容官网仅配置 network snippet 的场景；现有客户 VPS 不变。
