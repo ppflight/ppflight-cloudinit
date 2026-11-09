@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-readonly SCRIPT_VERSION="3.3.1"
+readonly SCRIPT_VERSION="3.3.2"
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)" || exit 1
 readonly SCRIPT_DIR
 CATALOG_HELPER="$SCRIPT_DIR/tools/ppflight-template-bootstrap.py"
@@ -744,6 +744,9 @@ create_template() {
     --memory "$MEMORY_MB" \
     --balloon "$BALLOON" \
     --cores "$CORES" \
+    --sockets 1 \
+    --numa 0 \
+    --hotplug network,disk,usb \
     --cpu "$CPU_TYPE" \
     --net0 "$(template_net0)" \
     --scsihw virtio-scsi-single \
@@ -808,6 +811,11 @@ verify_template() {
   [[ "$family" == "rhel" ]] && expected_snippet="$RHEL_SNIPPET"
   config="$(qm config "$vmid")"
   verify_template_network "$config"
+  grep -qx "cores: $CORES" <<< "$config" || die "$vmid CPU count mismatch"
+  grep -qx 'sockets: 1' <<< "$config" || die "$vmid CPU socket count mismatch"
+  grep -qx 'numa: 0' <<< "$config" || die "$vmid must disable NUMA"
+  grep -qx 'hotplug: network,disk,usb' <<< "$config" || die "$vmid must disable CPU and memory hotplug"
+  ! grep -q '^vcpus:' <<< "$config" || die "$vmid must not reserve CPU hotplug slots"
   local firmware="${row##*|}" efi
   grep -qx "bios: $firmware" <<< "$config" || die "$vmid firmware mismatch"
   efi="$(sed -n 's/^efidisk0: //p' <<< "$config")"
